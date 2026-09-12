@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/*
+ * Pragati Furniture — Tailwind 4 CSS-first theme.
+ * Warm furniture-store palette (placeholder until the owner confirms branding).
+ * Centralised here so a single edit re-themes the entire site (Project Scope §6).
+ */
+
+:root {
+  /* ── Brand tokens ───────────────────────────── */
+  --brand-primary: #7c5c3a;
+  --brand-primary-light: #a88b6a;
+  --brand-primary-dark: #5c3d22;
+  --brand-accent: #d4a574;
+  --brand-bg: #faf8f5;
+  --brand-surface: #ffffff;
+  --brand-text: #2c1810;
+  --brand-text-muted: #6b5d52;
+  --brand-border: #e8e0d8;
+  --brand-success: #4a7c59;
+  --brand-error: #b54a4a;
+
+  /* ── Geist font family (set by next/font in layout.tsx) ── */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@theme inline {
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-light: var(--brand-primary-light);
+  --color-brand-primary-dark: var(--brand-primary-dark);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-text: var(--brand-text);
+  --color-brand-text-muted: var(--brand-text-muted);
+  --color-brand-border: var(--brand-border);
+  --color-brand-success: var(--brand-success);
+  --color-brand-error: var(--brand-error);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ── Base ────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--brand-bg);
+  color: var(--brand-text);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* ── Utility helpers ─────────────────────────── */
+
+.page-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .page-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-container {
+    padding-inline: 2rem;
+  }
+}
