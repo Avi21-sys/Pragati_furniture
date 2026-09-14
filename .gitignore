@@ -29,3 +29,5 @@ Thumbs.db
 
 # Repo-local tooling
 local_postgres_data/
+
+.claude/
