@@ -4,7 +4,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { ok, fail } from "@/lib/apiResponse";
-import { serializeProduct } from "@/lib/serializers";
+import { serializePublicProduct } from "@/lib/serializers";
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
@@ -24,7 +24,7 @@ export async function GET(_req: Request, ctx: RouteContext) {
       return fail("Product not found", 404);
     }
 
-    return ok(serializeProduct(product));
+    return ok(serializePublicProduct(product));
   } catch (error) {
     console.error("[products/:slug] GET failed", error);
     return fail("Could not load product", 500);

@@ -23,7 +23,7 @@ export default function ProductGallery({
 
   if (!active) {
     return (
-      <div className="flex aspect-[4/3] w-full items-center justify-center rounded-xl border border-brand-border bg-brand-bg text-brand-text-muted">
+      <div className="flex aspect-[4/3] w-full items-center justify-center rounded-xl border border-brand-border bg-brand-bg text-text-secondary">
         No photo available yet
       </div>
     );
@@ -67,7 +67,7 @@ export default function ProductGallery({
         </div>
       ) : null}
 
-      <p className="mt-2 text-xs text-brand-text-muted">
+      <p className="mt-2 text-xs text-text-secondary">
         {ordered.length} photo{ordered.length === 1 ? "" : "s"} · tap a thumbnail to zoom preview
       </p>
     </div>

@@ -1,5 +1,7 @@
-// app/api/admin/categories/[id]/route.ts — admin category update + delete.
+// app/api/admin/categories/[id]/route.ts — admin get / update / delete category.
+// GET    → fetch a single category (for the edit form)
 // PUT    → update a category
+// PATCH  → update a category (same partial update; used by the admin UI)
 // DELETE → remove a category; BLOCKED when the category still has products
 //          (enforced in the route, not the DB, so a clear message is returned).
 // docs/API.md §3 / docs/DATABASE.md §3.
@@ -13,7 +15,30 @@ import { serializeCategory } from "@/lib/serializers";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+export async function GET(_req: Request, ctx: RouteContext) {
+  const { id } = await ctx.params;
+  const categoryId = Number(id);
+  if (!Number.isInteger(categoryId)) return fail("Invalid category id", 400);
+
+  try {
+    const category = await prisma.category.findUnique({ where: { id: categoryId } });
+    if (!category) return fail("Category not found", 404);
+    return ok(serializeCategory(category));
+  } catch (e) {
+    console.error("[admin/categories/:id] GET failed", e);
+    return fail("Could not load category", 500);
+  }
+}
+
 export async function PUT(req: Request, ctx: RouteContext) {
+  return updateCategory(req, ctx);
+}
+
+export async function PATCH(req: Request, ctx: RouteContext) {
+  return updateCategory(req, ctx);
+}
+
+async function updateCategory(req: Request, ctx: RouteContext) {
   const { id } = await ctx.params;
   const categoryId = Number(id);
   if (!Number.isInteger(categoryId)) return fail("Invalid category id", 400);

@@ -16,7 +16,7 @@ export default function CategoryCard({ category }: { category: CategoryCardData 
   return (
     <Link
       href={`/products/${category.slug}`}
-      className="group overflow-hidden rounded-xl border border-brand-border bg-brand-surface shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="group h-full overflow-hidden rounded-xl border border-brand-border bg-brand-surface shadow-sm"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-brand-bg">
         {category.imageUrl ? (
@@ -29,18 +29,18 @@ export default function CategoryCard({ category }: { category: CategoryCardData 
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <span className="text-5xl font-bold text-brand-border">PF</span>
+            <span className="font-heading text-5xl font-semibold text-brand-primary-light/60">pf</span>
           </div>
         )}
       </div>
       <div className="p-5">
-        <h3 className="text-lg font-semibold text-brand-text group-hover:text-brand-primary">
+        <h3 className="text-lg font-semibold text-text-primary group-hover:text-brand-primary">
           {category.name}
         </h3>
         {category.description ? (
-          <p className="mt-1 line-clamp-2 text-sm text-brand-text-muted">{category.description}</p>
+          <p className="mt-1 line-clamp-2 text-sm text-text-secondary">{category.description}</p>
         ) : null}
-        <p className="mt-3 text-xs font-medium uppercase tracking-wide text-brand-accent">
+        <p className="mt-3 text-xs font-medium uppercase tracking-wide text-text-secondary">
           {category.productCount} product{category.productCount === 1 ? "" : "s"}
         </p>
       </div>

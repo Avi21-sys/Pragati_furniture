@@ -15,7 +15,7 @@ export class ApiError extends Error {
 
 export async function apiFetch<T = unknown>(
   path: string,
-  options: RequestInit & { body?: unknown } = {}
+  options: Omit<RequestInit, "body"> & { body?: unknown } = {}
 ): Promise<T> {
   const { body, headers, ...rest } = options;
 

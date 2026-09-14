@@ -194,7 +194,62 @@ async function main() {
     }
   }
 
-  // 4. Enquiries — leave empty by design.
+  // 4. Starter FAQs — generic placeholder Q&A from docs/DATABASE.md §6, to be
+  //    replaced with real answers via the admin panel once the owner confirms them.
+  const starterFaqs = [
+    {
+      question: "Do you offer home delivery in Muzaffarnagar?",
+      answer:
+        "Yes, we offer home delivery within Muzaffarnagar. For areas outside the city, please contact us to confirm availability and charges.",
+    },
+    {
+      question: "Can furniture be customized (size, fabric, wood finish)?",
+      answer:
+        "Yes, many of our products can be customized. Visit our store or send us an enquiry with your requirements, and we'll let you know what's possible.",
+    },
+    {
+      question: "What materials are used in your furniture?",
+      answer:
+        "We work primarily with solid wood (such as sheesham) along with quality fabrics and finishes. Specific materials are listed on each product page where available.",
+    },
+    {
+      question: "What are your store timings?",
+      answer:
+        "Please contact us or check our Google Business listing for current store hours, as timings may vary on festivals and holidays.",
+    },
+    {
+      question: "Do you provide a warranty on furniture?",
+      answer:
+        "Warranty terms vary by product. Please ask in-store or mention it in your enquiry, and we'll confirm the applicable warranty for the item you're interested in.",
+    },
+    {
+      question: "What payment methods do you accept?",
+      answer:
+        "We accept cash and standard digital payment methods in-store. Please contact us for details on advance payment for custom orders.",
+    },
+    {
+      question: "How long does delivery take after ordering?",
+      answer:
+        "Delivery timelines depend on whether the item is in stock or made to order. We'll confirm an estimated timeline when you enquire about a specific product.",
+    },
+    {
+      question: "Can I visit the store to see the furniture in person?",
+      answer:
+        "Absolutely — we encourage it, especially for larger pieces. Visit us at our Muzaffarnagar store, or check the Contact page for our address and map.",
+    },
+  ];
+
+  for (let i = 0; i < starterFaqs.length; i++) {
+    const faq = starterFaqs[i];
+    const existing = await prisma.faq.findFirst({ where: { question: faq.question } });
+    if (existing) continue;
+    await prisma.faq.create({
+      data: { ...faq, displayOrder: i + 1, isActive: true },
+    });
+    console.log(`  + FAQ "${faq.question}"`);
+  }
+
+  // 5. Enquiries — leave empty by design.
 
   console.log("\nSeed complete. Log in at /admin to add your real products and images.");
   console.log(

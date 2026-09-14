@@ -2,29 +2,16 @@
 // Prisma rows contain Decimals and nesting; these converters keep the JSON
 // contract (docs/API.md) stable across public and admin routes.
 
-import type { Product, Category, ProductImage } from "@prisma/client";
+import type { Product, Category, ProductImage, Faq } from "@prisma/client";
 
 type ProductWithRelations = Product & {
   category: Category;
   images: ProductImage[];
 };
 
-export type PublicProduct = {
-  id: number;
-  name: string;
-  slug: string;
-  price: number | null;
-  shortDescription: string | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  categoryId: number;
-  category: { id: number; name: string; slug: string };
-  primaryImageUrl: string | null;
-  images: { id: number; imageUrl: string; displayOrder: number; isPrimary: boolean }[];
-};
-
-export function serializeProduct(product: ProductWithRelations): PublicProduct {
+/** Shared product → JSON conversion. Kept separate from the two public entry
+ *  points so the price-omission rule (below) can't drift out of sync. */
+function productBase(product: ProductWithRelations) {
   const images = [...product.images].sort((a, b) => a.displayOrder - b.displayOrder);
   const primary =
     images.find((img) => img.isPrimary) ??
@@ -36,7 +23,6 @@ export function serializeProduct(product: ProductWithRelations): PublicProduct {
     id: product.id,
     name: product.name,
     slug: product.slug,
-    price: product.price === null ? null : Number(product.price),
     shortDescription: product.shortDescription,
     isActive: product.isActive,
     createdAt: product.createdAt.toISOString(),
@@ -47,13 +33,46 @@ export function serializeProduct(product: ProductWithRelations): PublicProduct {
       name: product.category.name,
       slug: product.category.slug,
     },
-    primaryImageUrl: primary? primary.imageUrl : null,
+    primaryImageUrl: primary ? primary.imageUrl : null,
     images: images.map((img) => ({
       id: img.id,
       imageUrl: img.imageUrl,
       displayOrder: img.displayOrder,
       isPrimary: img.isPrimary,
     })),
+  };
+}
+
+/** Admin/internal product shape — includes price (docs/API.md §3). */
+export type PublicProduct = ReturnType<typeof productBase> & { price: number | null };
+
+export function serializeProduct(product: ProductWithRelations): PublicProduct {
+  return {
+    ...productBase(product),
+    price: product.price === null ? null : Number(product.price),
+  };
+}
+
+/** Public product shape — the `price` key is omitted entirely, not sent as
+ *  `null`, per docs/API.md §2 FINAL DECISION (blanket rule, no per-product
+ *  toggle). Admin serialization keeps price; this is the only public path. */
+export type PublicApiProduct = ReturnType<typeof productBase>;
+
+export function serializePublicProduct(product: ProductWithRelations): PublicApiProduct {
+  return productBase(product);
+}
+
+/** FAQ — full shape for admin responses (docs/API.md §3). The public FAQ
+ *  endpoint returns only id/question/answer (docs/API.md §2). */
+export function serializeFaq(faq: Faq) {
+  return {
+    id: faq.id,
+    question: faq.question,
+    answer: faq.answer,
+    displayOrder: faq.displayOrder,
+    isActive: faq.isActive,
+    createdAt: faq.createdAt.toISOString(),
+    updatedAt: faq.updatedAt.toISOString(),
   };
 }
 

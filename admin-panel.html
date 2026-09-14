@@ -1,0 +1,642 @@
+<title>Pragati Furniture Admin</title>
+<meta name="description" content="Admin panel for Pragati Furniture - manage products, categories, and enquiries">
+<style>
+:root {
+  /* Warm earthy palette for furniture admin */
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --border: #E8E4DF;
+  --text: #2D2A26;
+  --text-muted: #6B6560;
+  --primary: #5D4E37;
+  --primary-dark: #4A3F2E;
+  --accent: #2E7D32;
+  --danger: #C62828;
+  --warning: #F57C00;
+  --success: #2E7D32;
+  --sidebar-width: 240px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1A1815;
+    --surface: #252220;
+    --border: #3D3835;
+    --text: #F0EDE9;
+    --text-muted: #9A9490;
+    --primary: #C4B59D;
+    --primary-dark: #A89580;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Source Sans 3", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn:hover { background: var(--bg); text-decoration: none; }
+.btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-danger { color: var(--danger); border-color: #FFCDD2; }
+.btn-danger:hover { background: #FFEBEE; }
+.btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+
+.layout { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 0;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-header { padding: 0 1.5rem 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+.sidebar-brand { font-size: 1.125rem; font-weight: 600; color: var(--text); }
+.sidebar-sub { font-size: 0.75rem; color: var(--text-muted); }
+
+.nav-item {
+  display: block;
+  padding: 0.625rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  transition: all 0.15s ease;
+}
+.nav-item:hover { background: var(--bg); color: var(--text); text-decoration: none; }
+.nav-item.active { background: var(--bg); color: var(--primary); font-weight: 500; border-right: 3px solid var(--primary); }
+
+.main { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
+
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+.page-title { font-size: 1.75rem; font-weight: 600; color: var(--text); }
+.page-sub { color: var(--text-muted); font-size: 0.9375rem; margin-top: 0.25rem; }
+
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+.stat-label { font-size: 0.8125rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 2rem; font-weight: 600; color: var(--text); margin-top: 0.25rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.card-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.card-title { font-size: 1rem; font-weight: 600; }
+.card-body { padding: 0; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 0.875rem 1.25rem; text-align: left; border-bottom: 1px solid var(--border); }
+th { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); background: var(--bg); }
+tr:hover { background: var(--bg); }
+
+.product-cell { display: flex; align-items: center; gap: 0.75rem; }
+.product-thumb { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: var(--bg); }
+.product-name { font-weight: 500; }
+.product-slug { font-size: 0.8125rem; color: var(--text-muted); }
+
+.badge { display: inline-block; padding: 0.25rem 0.625rem; font-size: 0.75rem; font-weight: 500; border-radius: 999px; }
+.badge-active { background: #E8F5E9; color: #2E7D32; }
+.badge-inactive { background: #ECEFF1; color: #546E7A; }
+.badge-new { background: #E3F2FD; color: #1565C0; }
+.badge-contacted { background: #FFF3E0; color: #E65100; }
+.badge-closed { background: #ECEFF1; color: #546E7A; }
+
+.actions { display: flex; gap: 0.5rem; }
+
+.filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.filter-btn { padding: 0.375rem 0.875rem; font-size: 0.8125rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+.filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+.filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.enquiry-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; }
+.enquiry-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.enquiry-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: 0.875rem; color: var(--text-muted); align-items: center; }
+.enquiry-meta a { color: var(--primary); }
+.enquiry-body { padding: 1rem 1.25rem; }
+.enquiry-message { background: var(--bg); padding: 0.875rem; border-radius: 6px; font-size: 0.9375rem; white-space: pre-wrap; }
+.enquiry-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.enquiry-footer label { font-size: 0.8125rem; color: var(--text-muted); }
+
+.empty-state { padding: 3rem; text-align: center; color: var(--text-muted); }
+
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.375rem; }
+.form-label .req { color: var(--danger); }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 0.625rem 0.75rem; font-size: 0.9375rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+.form-hint { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.25rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+.modal { background: var(--surface); border-radius: 12px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+.modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 1.125rem; font-weight: 600; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); line-height: 1; }
+.modal-body { padding: 1.5rem; }
+.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+[hidden] { display: none !important; }
+
+@media (max-width: 640px) {
+  .sidebar { position: relative; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  .main { margin-left: 0; }
+  .form-row { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; gap: 1rem; }
+}
+</style>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">🪑 Pragati Furniture</div>
+      <div class="sidebar-sub">Admin Panel</div>
+    </div>
+    <nav>
+      <a href="#" class="nav-item active" data-view="products">📦 Products</a>
+      <a href="#" class="nav-item" data-view="categories">📁 Categories</a>
+      <a href="#" class="nav-item" data-view="enquiries">💬 Enquiries</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <!-- Products View -->
+    <div id="products-view">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Products</h1>
+          <p class="page-sub">Manage your furniture catalog</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('product-modal')">+ Add Product</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Products</div>
+          <div class="stat-value">24</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active</div>
+          <div class="stat-value">21</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Inactive</div>
+          <div class="stat-value">3</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">All Products</span>
+          <input type="search" class="form-input" style="width: 240px;" placeholder="Search products...">
+        </div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="product-cell">
+                    <div class="product-thumb" style="background: linear-gradient(135deg, #8D6E63, #6D4C41);"></div>
+                    <div>
+                      <div class="product-name">Teak Wood 3-Seater Sofa</div>
+                      <div class="product-slug">/teak-3-seater-sofa</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Sofas</td>
+                <td>₹45,000</td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="product-cell">
+                    <div class="product-thumb" style="background: linear-gradient(135deg, #A1887F, #795548);"></div>
+                    <div>
+                      <div class="product-name">Sheesham King Size Bed</div>
+                      <div class="product-slug">/sheesham-king-bed</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Beds</td>
+                <td>₹38,000</td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="product-cell">
+                    <div class="product-thumb" style="background: linear-gradient(135deg, #BCAAA4, #8D6E63);"></div>
+                    <div>
+                      <div class="product-name">6-Seater Dining Set</div>
+                      <div class="product-slug">/6-seater-dining-set</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Dining Sets</td>
+                <td>₹52,000</td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="product-cell">
+                    <div class="product-thumb" style="background: linear-gradient(135deg, #D7CCC8, #A1887F);"></div>
+                    <div>
+                      <div class="product-name">Wardrobe with Mirror</div>
+                      <div class="product-slug">/wardrobe-mirror</div>
+                    </div>
+                  </div>
+                </td>
+                <td>Wardrobes</td>
+                <td>₹28,000</td>
+                <td><span class="badge badge-inactive">Inactive</span></td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories View -->
+    <div id="categories-view" hidden>
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Categories</h1>
+          <p class="page-sub">Organize your product catalog</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('category-modal')">+ Add Category</button>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Slug</th>
+                <th>Products</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Sofas</strong></td>
+                <td>/sofas</td>
+                <td>8 products</td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Beds</strong></td>
+                <td>/beds</td>
+                <td>6 products</td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Dining Sets</strong></td>
+                <td>/dining-sets</td>
+                <td>5 products</td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Wardrobes</strong></td>
+                <td>/wardrobes</td>
+                <td>3 products</td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Chairs</strong></td>
+                <td>/chairs</td>
+                <td>2 products</td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enquiries View -->
+    <div id="enquiries-view" hidden>
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Enquiries</h1>
+          <p class="page-sub">Customer messages from the contact form</p>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active">All (12)</button>
+        <button class="filter-btn">New (3)</button>
+        <button class="filter-btn">Contacted (6)</button>
+        <button class="filter-btn">Closed (3)</button>
+      </div>
+
+      <div class="enquiry-card">
+        <div class="enquiry-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+              <strong>Rajesh Kumar</strong>
+              <span class="badge badge-new">NEW</span>
+            </div>
+            <div class="enquiry-meta">
+              <a href="tel:+919876543210">📞 +91 98765 43210</a>
+              <span>✉️ rajesh.kumar@email.com</span>
+              <span>re: <a href="#">Teak 3-Seater Sofa</a></span>
+              <span>Sep 12, 2026</span>
+            </div>
+          </div>
+          <a href="https://wa.me/919876543210?text=Hi Rajesh, thank you for contacting Pragati Furniture!" target="_blank" class="btn btn-sm" style="background: #25D366; color: white; border-color: #25D366;">WhatsApp</a>
+        </div>
+        <div class="enquiry-body">
+          <div class="enquiry-message">Hello, I am interested in the teak wood 3-seater sofa. Is it available in a different color? Also, do you deliver to Delhi NCR? Please let me know the delivery charges.</div>
+        </div>
+        <div class="enquiry-footer">
+          <label>Update status:</label>
+          <button class="btn btn-sm">Mark New</button>
+          <button class="btn btn-sm">Mark Contacted</button>
+          <button class="btn btn-sm">Mark Closed</button>
+        </div>
+      </div>
+
+      <div class="enquiry-card">
+        <div class="enquiry-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+              <strong>Priya Sharma</strong>
+              <span class="badge badge-contacted">CONTACTED</span>
+            </div>
+            <div class="enquiry-meta">
+              <a href="tel:+919876543211">📞 +91 98765 43211</a>
+              <span>re: <a href="#">6-Seater Dining Set</a></span>
+              <span>Sep 10, 2026</span>
+            </div>
+          </div>
+          <a href="https://wa.me/919876543211?text=Hi Priya, thank you for contacting Pragati Furniture!" target="_blank" class="btn btn-sm" style="background: #25D366; color: white; border-color: #25D366;">WhatsApp</a>
+        </div>
+        <div class="enquiry-body">
+          <div class="enquiry-message">We are looking for a dining set for our new home. Can you suggest which wood would be best for durability? We have two young children.</div>
+        </div>
+        <div class="enquiry-footer">
+          <label>Update status:</label>
+          <button class="btn btn-sm">Mark New</button>
+          <button class="btn btn-sm">Mark Contacted</button>
+          <button class="btn btn-sm">Mark Closed</button>
+        </div>
+      </div>
+
+      <div class="enquiry-card">
+        <div class="enquiry-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+              <strong>Amit Gupta</strong>
+              <span class="badge badge-closed">CLOSED</span>
+            </div>
+            <div class="enquiry-meta">
+              <a href="tel:+919876543212">📞 +91 98765 43212</a>
+              <span>General inquiry</span>
+              <span>Sep 5, 2026</span>
+            </div>
+          </div>
+        </div>
+        <div class="enquiry-body">
+          <div class="enquiry-message">Do you make custom-sized wardrobes? I need a wardrobe that fits into a 6-foot wide alcove.</div>
+        </div>
+        <div class="enquiry-footer">
+          <label>Update status:</label>
+          <button class="btn btn-sm">Mark New</button>
+          <button class="btn btn-sm">Mark Contacted</button>
+          <button class="btn btn-sm">Mark Closed</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Product Modal -->
+<div id="product-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Add Product</h2>
+      <button class="modal-close" onclick="closeModal('product-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="product-form">
+        <div class="form-group">
+          <label class="form-label">Product Name <span class="req">*</span></label>
+          <input type="text" class="form-input" name="name" required placeholder="e.g. Teak Wood 3-Seater Sofa">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category <span class="req">*</span></label>
+            <select class="form-select" name="categoryId" required>
+              <option value="">— Select category —</option>
+              <option value="1">Sofas</option>
+              <option value="2">Beds</option>
+              <option value="3">Dining Sets</option>
+              <option value="4">Wardrobes</option>
+              <option value="5">Chairs</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Price (₹)</label>
+            <input type="number" class="form-input" name="price" placeholder="Leave blank for price on request">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL Slug</label>
+          <input type="text" class="form-input" name="slug" placeholder="Auto-generated from name">
+          <p class="form-hint">Lowercase letters, numbers, and dashes only</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Short Description</label>
+          <textarea class="form-textarea" name="description" rows="3" placeholder="Brief summary shown on product cards"></textarea>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" name="isActive" checked>
+            <span class="form-label" style="margin: 0;">Active (visible on public site)</span>
+          </label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('product-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Create Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Category Modal -->
+<div id="category-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Add Category</h2>
+      <button class="modal-close" onclick="closeModal('category-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="category-form">
+        <div class="form-group">
+          <label class="form-label">Category Name <span class="req">*</span></label>
+          <input type="text" class="form-input" name="name" required placeholder="e.g. Sofas">
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL Slug</label>
+          <input type="text" class="form-input" name="slug" placeholder="Auto-generated from name">
+          <p class="form-hint">Lowercase letters, numbers, and dashes only</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" name="description" rows="3" placeholder="Brief description of this category"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('category-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategory()">Create Category</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Navigation
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', e => {
+    e.preventDefault();
+    const view = item.dataset.view;
+
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+
+    document.querySelectorAll('[id$="-view"]').forEach(v => v.hidden = true);
+    document.getElementById(view + '-view').hidden = false;
+  });
+});
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Modal functions
+function openModal(id) {
+  document.getElementById(id).hidden = false;
+}
+
+function closeModal(id) {
+  document.getElementById(id).hidden = true;
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) {
+      overlay.hidden = true;
+    }
+  });
+});
+
+// Form submissions (demo)
+function saveProduct() {
+  const form = document.getElementById('product-form');
+  const data = new FormData(form);
+  console.log('Saving product:', Object.fromEntries(data));
+  closeModal('product-modal');
+  alert('Product created! (Demo - API not connected)');
+  form.reset();
+}
+
+function saveCategory() {
+  const form = document.getElementById('category-form');
+  const data = new FormData(form);
+  console.log('Saving category:', Object.fromEntries(data));
+  closeModal('category-modal');
+  alert('Category created! (Demo - API not connected)');
+  form.reset();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.hidden = true);
+  }
+});
+</script>

@@ -1,5 +1,7 @@
-// app/api/admin/products/[id]/route.ts — admin update + delete product.
+// app/api/admin/products/[id]/route.ts — admin get / update / delete product.
+// GET    → fetch a single product (for the edit form)
 // PUT    → update a product (partial fields accepted)
+// PATCH  → update a product (same partial update; used by the admin UI)
 // DELETE → remove a product (its images cascade by DB constraint)
 // docs/API.md §3.
 
@@ -12,7 +14,33 @@ import { serializeProduct } from "@/lib/serializers";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+export async function GET(_req: Request, ctx: RouteContext) {
+  const { id } = await ctx.params;
+  const productId = Number(id);
+  if (!Number.isInteger(productId)) return fail("Invalid product id", 400);
+
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { category: true, images: true },
+    });
+    if (!product) return fail("Product not found", 404);
+    return ok(serializeProduct(product));
+  } catch (e) {
+    console.error("[admin/products/:id] GET failed", e);
+    return fail("Could not load product", 500);
+  }
+}
+
 export async function PUT(req: Request, ctx: RouteContext) {
+  return updateProduct(req, ctx);
+}
+
+export async function PATCH(req: Request, ctx: RouteContext) {
+  return updateProduct(req, ctx);
+}
+
+async function updateProduct(req: Request, ctx: RouteContext) {
   const { id } = await ctx.params;
   const productId = Number(id);
   if (!Number.isInteger(productId)) return fail("Invalid product id", 400);

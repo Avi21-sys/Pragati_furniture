@@ -8,7 +8,7 @@ export type Crumb = { label: string; href?: string };
 export default function Breadcrumbs({ items }: { items: Crumb[] }) {
   return (
     <nav aria-label="Breadcrumb" className="py-4">
-      <ol className="flex flex-wrap items-center gap-1.5 text-sm text-brand-text-muted">
+      <ol className="flex flex-wrap items-center gap-1.5 text-sm text-text-secondary">
         {items.map((item, i) => {
           const isLast = i === items.length - 1;
           return (
@@ -19,7 +19,7 @@ export default function Breadcrumbs({ items }: { items: Crumb[] }) {
                   {item.label}
                 </Link>
               ) : (
-                <span aria-current={isLast ? "page" : undefined} className={isLast ? "font-medium text-brand-text" : ""}>
+                <span aria-current={isLast ? "page" : undefined} className={isLast ? "font-medium text-text-primary" : ""}>
                   {item.label}
                 </span>
               )}

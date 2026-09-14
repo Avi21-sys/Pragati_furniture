@@ -38,11 +38,11 @@ export default function EnquiryForm({ productId, productName }: Props) {
     try {
       await apiFetch("/api/enquiries", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           ...form,
           customerEmail: form.customerEmail || null,
           productId: productId ?? null,
-        },
+        }),
       });
       setStatus("success");
       setForm(emptyForm);
@@ -54,9 +54,14 @@ export default function EnquiryForm({ productId, productName }: Props) {
 
   if (status === "success") {
     return (
-      <div className="rounded-lg bg-brand-success/10 p-6 text-center">
-        <p className="text-lg font-semibold text-brand-success">Enquiry sent! 🎉</p>
-        <p className="mt-1 text-sm text-brand-text-muted">
+      <div className="rounded-xl border border-brand-success/30 bg-brand-success/10 p-6 text-center">
+        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-brand-success text-text-on-primary">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
+        <p className="mt-3 text-lg font-semibold text-brand-success">Enquiry sent</p>
+        <p className="mt-1 text-sm text-text-secondary">
           Thanks for reaching out{productName ? ` about "${productName}"` : ""}. We'll contact you
           within a day.
         </p>
@@ -67,13 +72,13 @@ export default function EnquiryForm({ productId, productName }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {productName ? (
-        <div className="rounded-md bg-brand-bg px-4 py-3 text-sm text-brand-text-muted">
-          Enquiring about: <span className="font-semibold text-brand-text">{productName}</span>
+        <div className="rounded-lg bg-brand-cream-dark px-4 py-3 text-sm text-text-secondary">
+          Enquiring about: <span className="font-semibold text-text-primary">{productName}</span>
         </div>
       ) : null}
 
       <div>
-        <label htmlFor="customerName" className="mb-1 block text-sm font-medium text-brand-text">
+        <label htmlFor="customerName" className="mb-1 block text-sm font-medium text-text-primary">
           Your name *
         </label>
         <input
@@ -83,12 +88,12 @@ export default function EnquiryForm({ productId, productName }: Props) {
           value={form.customerName}
           onChange={update("customerName")}
           placeholder="e.g. Ramesh Kumar"
-          className="w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+          className="field"
         />
       </div>
 
       <div>
-        <label htmlFor="customerPhone" className="mb-1 block text-sm font-medium text-brand-text">
+        <label htmlFor="customerPhone" className="mb-1 block text-sm font-medium text-text-primary">
           Phone number *
         </label>
         <input
@@ -98,13 +103,13 @@ export default function EnquiryForm({ productId, productName }: Props) {
           value={form.customerPhone}
           onChange={update("customerPhone")}
           placeholder="e.g. +91 98765 43210"
-          className="w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+          className="field"
         />
       </div>
 
       <div>
-        <label htmlFor="customerEmail" className="mb-1 block text-sm font-medium text-brand-text">
-          Email <span className="text-brand-text-muted">(optional)</span>
+        <label htmlFor="customerEmail" className="mb-1 block text-sm font-medium text-text-primary">
+          Email <span className="text-text-secondary">(optional)</span>
         </label>
         <input
           id="customerEmail"
@@ -112,12 +117,12 @@ export default function EnquiryForm({ productId, productName }: Props) {
           value={form.customerEmail}
           onChange={update("customerEmail")}
           placeholder="you@example.com"
-          className="w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+          className="field"
         />
       </div>
 
       <div>
-        <label htmlFor="message" className="mb-1 block text-sm font-medium text-brand-text">
+        <label htmlFor="message" className="mb-1 block text-sm font-medium text-text-primary">
           Message *
         </label>
         <textarea
@@ -127,7 +132,7 @@ export default function EnquiryForm({ productId, productName }: Props) {
           value={form.message}
           onChange={update("message")}
           placeholder="Tell us what you're looking for — size, wood type, budget…"
-          className="w-full resize-y rounded-md border border-brand-border bg-brand-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
+          className="field w-full"
         />
       </div>
 
@@ -138,7 +143,7 @@ export default function EnquiryForm({ productId, productName }: Props) {
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="w-full rounded-md bg-brand-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-lg bg-brand-primary px-4 py-3 text-sm font-semibold text-text-on-primary transition-colors hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
       >
         {status === "submitting" ? "Sending…" : "Send Enquiry"}
       </button>

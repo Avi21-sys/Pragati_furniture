@@ -14,6 +14,7 @@ type Session = { username: string; role: string };
 const NAV_ITEMS = [
   { href: "/admin/products", label: "Products" },
   { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/faqs", label: "FAQs" },
   { href: "/admin/enquiries", label: "Enquiries" },
 ];
 
@@ -25,12 +26,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     let active = true;
+    // Re-check on every route change: a client-side navigation from the login
+    // page preserves this layout's state, so without re-running the check a
+    // stale `null` session would render a blank page on the next route.
+    setChecking(true);
     apiFetch<Session>("/api/admin/me")
       .then((data) => {
         if (active) setSession(data);
       })
       .catch(() => {
-        if (active) router.replace("/admin/login");
+        if (active && pathname !== "/admin/login") router.replace("/admin/login");
       })
       .finally(() => {
         if (active) setChecking(false);
@@ -38,7 +43,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, pathname]);
 
   async function handleLogout() {
     try {
@@ -58,7 +63,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-bg">
-        <p className="text-sm text-brand-text-muted">Checking session…</p>
+        <p className="text-sm text-text-secondary">Checking session…</p>
       </div>
     );
   }
@@ -67,11 +72,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-screen bg-brand-bg">
-      <header className="border-b border-brand-border bg-white">
+      <header className="border-b border-white/10 bg-brand-primary-dark">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
-            <p className="text-lg font-semibold text-brand-text">Pragati Furniture</p>
-            <p className="text-xs text-brand-text-muted">Admin panel</p>
+            <p className="text-lg font-semibold text-text-on-primary">Pragati Furniture</p>
+            <p className="text-xs text-text-on-primary/60">Admin panel</p>
           </div>
           <nav className="flex items-center gap-4">
             {NAV_ITEMS.map((item) => (
@@ -80,8 +85,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 href={item.href}
                 className={`text-sm font-medium transition-colors ${
                   pathname.startsWith(item.href)
-                    ? "text-brand-primary"
-                    : "text-brand-text-muted hover:text-brand-text"
+                    ? "text-text-on-primary underline decoration-brand-accent decoration-2 underline-offset-[6px]"
+                    : "text-text-on-primary/75 hover:text-text-on-primary"
                 }`}
               >
                 {item.label}
@@ -89,10 +94,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-brand-text-muted">{session.username}</span>
+            <span className="text-sm text-text-on-primary/70">{session.username}</span>
             <button
               onClick={handleLogout}
-              className="rounded-md border border-brand-border px-3 py-1.5 text-sm font-medium text-brand-text transition-colors hover:bg-brand-bg"
+              className="rounded-lg border border-text-on-primary/30 px-3 py-1.5 text-sm font-medium text-text-on-primary transition-colors hover:bg-black/10"
             >
               Logout
             </button>

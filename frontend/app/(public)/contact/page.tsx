@@ -41,10 +41,10 @@ export default function ContactPage() {
     <div className="pb-16">
       <JsonLd data={localBusinessJsonLd} />
 
-      <section className="bg-brand-primary-dark py-14 text-white">
+      <section className="bg-brand-primary-dark py-14 text-text-on-primary">
         <div className="page-container max-w-3xl text-center">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Contact us</h1>
-          <p className="mt-3 text-lg text-white/80">
+          <h1 className="text-3xl font-semibold tracking-tight text-text-on-primary sm:text-4xl">Contact us</h1>
+          <p className="mt-3 text-lg text-text-on-primary/85">
             Have a question or ready to buy? We&apos;d love to hear from you.
           </p>
         </div>
@@ -56,44 +56,44 @@ export default function ContactPage() {
           {/* Contact cards */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-brand-border bg-brand-surface p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-accent">Call us</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">Call us</h2>
               <a
                 href={`tel:${STORE.phoneDisplay.replace(/\s/g, "")}`}
-                className="mt-2 block text-lg font-semibold text-brand-text hover:text-brand-primary"
+                className="mt-2 block text-lg font-semibold text-text-primary hover:text-brand-primary"
               >
                 {STORE.phoneDisplay}
               </a>
-              <p className="mt-1 text-sm text-brand-text-muted">{STORE.hours}</p>
+              <p className="mt-1 text-sm text-text-secondary">{STORE.hours}</p>
             </div>
 
             <div className="rounded-xl border border-brand-border bg-brand-surface p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-accent">WhatsApp</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">WhatsApp</h2>
               <a
                 href={whatsappLink("Hello Pragati Furniture! I'd like to ask about your furniture.")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-block rounded-md bg-brand-success px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-success/90"
+                className="btn-primary mt-2 inline-block rounded-lg bg-brand-success px-4 py-2 text-sm font-semibold text-text-on-primary hover:bg-brand-primary-light"
               >
                 Chat on WhatsApp
               </a>
             </div>
 
             <div className="rounded-xl border border-brand-border bg-brand-surface p-5 sm:col-span-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-accent">Visit the store</h2>
-              <address className="mt-2 text-sm not-italic leading-6 text-brand-text">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">Visit the store</h2>
+              <address className="mt-2 text-sm not-italic leading-6 text-text-primary">
                 {STORE.addressLines.map((line) => (
                   <span key={line} className="block">
                     {line}
                   </span>
                 ))}
               </address>
-              <p className="mt-2 text-sm text-brand-text-muted">{STORE.hours}</p>
+              <p className="mt-2 text-sm text-text-secondary">{STORE.hours}</p>
             </div>
           </div>
 
           {/* Enquiry form */}
           <div className="mt-8 rounded-xl border border-brand-border bg-brand-surface p-6">
-            <SectionHeading align="left" eyebrow="Send an enquiry" title="We'll get back to you" />
+            <SectionHeading align="left" title="We'll get back to you" />
             <div className="mt-6">
               <EnquiryForm />
             </div>
@@ -102,7 +102,7 @@ export default function ContactPage() {
 
         {/* Right: map */}
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold text-brand-text">Find us on the map</h2>
+          <h2 className="text-lg font-semibold text-text-primary">Find us on the map</h2>
           <div className="overflow-hidden rounded-xl border border-brand-border">
             <iframe
               title="Map showing the location of Pragati Furniture, Muzaffarnagar"
@@ -115,7 +115,7 @@ export default function ContactPage() {
               allowFullScreen
             />
           </div>
-          <p className="text-sm text-brand-text-muted">
+          <p className="text-sm text-text-secondary">
             Exact address and map pin need confirmation with the shop owner before launch.
           </p>
         </div>

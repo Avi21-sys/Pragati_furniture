@@ -4,25 +4,24 @@
 import Image from "next/image";
 import Link from "next/link";
 
+// Note: no `price` on this card — prices are never shown publicly (a blanket
+// rule, docs/API.md §2 FINAL DECISION + docs/DATABASE.md §3). The card leads
+// with the enquiry CTA path instead.
+
 export type ProductCardData = {
   id: number;
   name: string;
   slug: string;
-  price: number | null;
   shortDescription?: string | null;
   primaryImageUrl?: string | null;
   category: { name: string; slug: string };
 };
 
-export function formatPrice(price: number | null): string {
-  return price === null ? "Contact for price" : `₹${price.toLocaleString("en-IN")}`;
-}
-
 export default function ProductCard({ product }: { product: ProductCardData }) {
   return (
     <Link
       href={`/products/${product.category.slug}/${product.slug}`}
-      className="group overflow-hidden rounded-xl border border-brand-border bg-brand-surface shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="group h-full overflow-hidden rounded-xl border border-brand-border bg-brand-surface shadow-sm"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-brand-bg">
         {product.primaryImageUrl ? (
@@ -34,7 +33,7 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-brand-text-muted">
+          <div className="flex h-full w-full items-center justify-center text-text-secondary">
             <svg className="h-12 w-12 text-brand-border" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path
                 strokeLinecap="round"
@@ -47,14 +46,14 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
       </div>
 
       <div className="p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-brand-accent">
+        <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           {product.category.name}
         </p>
-        <h3 className="mt-1 line-clamp-2 text-base font-semibold text-brand-text group-hover:text-brand-primary">
+        <h3 className="mt-1 line-clamp-2 text-base font-semibold text-text-primary group-hover:text-brand-primary">
           {product.name}
         </h3>
-        <p className="mt-2 text-sm font-semibold text-brand-primary-dark">
-          {formatPrice(product.price)}
+        <p className="mt-2 text-sm font-medium text-brand-primary">
+          Enquire for details
         </p>
       </div>
     </Link>

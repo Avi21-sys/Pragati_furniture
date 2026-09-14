@@ -8,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { pageMetadata, fallbackCategoryDescription } from "@/lib/seo";
 import Breadcrumbs from "@/components/public/Breadcrumbs";
 import ProductCard from "@/components/public/ProductCard";
+import CategoryPager from "@/components/public/CategoryPager";
+import { StaggerGroup, StaggerItem } from "@/components/public/StaggerGrid";
 
 export const revalidate = 3600; // 1 hour
 
@@ -36,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CategoryPage({ params }: PageProps) {
   const { category } = await params;
 
-  const [cat, products] = await Promise.all([
+  const [cat, products, categories] = await Promise.all([
     prisma.category.findUnique({ where: { slug: category } }),
     prisma.product.findMany({
       where: { isActive: true, category: { slug: category } },
@@ -45,6 +47,10 @@ export default async function CategoryPage({ params }: PageProps) {
         category: true,
         images: { orderBy: [{ isPrimary: "desc" }, { displayOrder: "asc" }], take: 1 },
       },
+    }),
+    prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: { name: true, slug: true },
     }),
   ]);
 
@@ -57,37 +63,40 @@ export default async function CategoryPage({ params }: PageProps) {
     <div className="page-container pb-16">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: cat.name }]} />
 
+      {/* Prev/next category navigation */}
+      <CategoryPager categories={categories} currentSlug={cat.slug} />
+
       {/* Category header + SEO description */}
       <div className="max-w-3xl border-b border-brand-border pb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-brand-text sm:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
           {cat.name}
         </h1>
-        <p className="mt-3 text-base leading-7 text-brand-text-muted">{description}</p>
-        <p className="mt-2 text-sm font-medium uppercase tracking-wide text-brand-accent">
+        <p className="mt-3 text-base leading-7 text-text-secondary">{description}</p>
+        <p className="mt-2 text-sm font-medium uppercase tracking-wide text-text-secondary">
           {products.length} product{products.length === 1 ? "" : "s"}
         </p>
       </div>
 
       {products.length > 0 ? (
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <StaggerGroup className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={{
-                id: p.id,
-                name: p.name,
-                slug: p.slug,
-                price: p.price === null ? null : Number(p.price),
-                shortDescription: p.shortDescription,
-                primaryImageUrl: p.images[0]?.imageUrl ?? null,
-                category: { name: cat.name, slug: cat.slug },
-              }}
-            />
+            <StaggerItem key={p.id} hoverLift>
+              <ProductCard
+                product={{
+                  id: p.id,
+                  name: p.name,
+                  slug: p.slug,
+                  shortDescription: p.shortDescription,
+                  primaryImageUrl: p.images[0]?.imageUrl ?? null,
+                  category: { name: cat.name, slug: cat.slug },
+                }}
+              />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGroup>
       ) : (
-        <div className="mt-12 text-center text-brand-text-muted">
-          <p className="text-lg font-medium text-brand-text">
+        <div className="mt-12 text-center text-text-secondary">
+          <p className="text-lg font-medium text-text-primary">
             No items in this category yet.
           </p>
           <p className="mt-1 text-sm">New pieces are on their way — check back soon or message us to know more.</p>

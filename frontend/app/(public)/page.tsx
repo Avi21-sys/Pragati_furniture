@@ -10,7 +10,8 @@ import SectionHeading from "@/components/public/SectionHeading";
 import CategoryCard from "@/components/public/CategoryCard";
 import ProductCard from "@/components/public/ProductCard";
 import JsonLd from "@/components/public/JsonLd";
-
+import RevealOnScroll from "@/components/public/RevealOnScroll";
+import { StaggerGroup, StaggerItem } from "@/components/public/StaggerGrid";
 export const metadata = pageMetadata({
   title: "Quality Wooden Furniture in Muzaffarnagar",
   description:
@@ -66,22 +67,20 @@ export default async function HomePage() {
       <JsonLd data={localBusinessJsonLd} />
 
       {/* ── Hero ─────────────────────────────────────── */}
-      <section className="bg-brand-primary-dark text-white">
+      <section className="bg-brand-primary-dark text-text-on-primary">
         <div className="page-container py-20 text-center sm:py-28">
-          <p className="text-sm font-semibold uppercase tracking-widest text-brand-accent">
-            Family-owned furniture store · {STORE.city}, {STORE.region}
-          </p>
-          <h1 className="mx-auto mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+          <h1 className="text-2xl font-bold leading-snug tracking-tight text-text-on-primary sm:text-4xl sm:leading-tight">
             Quality wooden furniture for every Indian home
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-white/80">
-            Hand-picked sofas, beds, dining sets and more. Built to last, priced
-            honestly, and made right here in {STORE.city}.
+          <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-brand-accent" aria-hidden="true" />
+          <p className="mx-auto mt-5 max-w-md text-sm leading-6 text-text-on-primary/85 sm:text-base sm:leading-7">
+            A family-run furniture store in {STORE.city}, {STORE.region} — hand-picked
+            sofas, beds, dining sets and more. Built to last, priced honestly.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={categories[0] ? `/products/${categories[0].slug}` : "/contact"}
-              className="w-full rounded-md bg-brand-accent px-6 py-3 text-base font-semibold text-brand-primary-dark transition-colors hover:bg-brand-accent/90 sm:w-auto"
+              className="btn-primary w-full rounded-lg bg-brand-cream px-6 py-3 text-base font-semibold text-brand-primary hover:bg-brand-cream-dark sm:w-auto"
             >
               Browse furniture
             </Link>
@@ -89,7 +88,7 @@ export default async function HomePage() {
               href={whatsappLink(`Hello ${STORE.name}! I'd like to know more about your furniture.`)}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full rounded-md border border-white/30 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto"
+              className="w-full rounded-lg border border-text-on-primary/30 px-6 py-3 text-base font-semibold text-text-on-primary transition-colors hover:bg-black/10 sm:w-auto"
             >
               Chat with us
             </a>
@@ -101,56 +100,55 @@ export default async function HomePage() {
       {categories.length > 0 ? (
         <section className="page-container py-16 sm:py-20">
           <SectionHeading
-            eyebrow="What we offer"
             title="Browse by category"
             description="Explore our range of furniture for every room in your home."
           />
-          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerGroup className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((cat) => (
-              <CategoryCard
-                key={cat.id}
-                category={{
-                  name: cat.name,
-                  slug: cat.slug,
-                  description: cat.description,
-                  productCount: cat._count.products,
-                  imageUrl: cat.products[0]?.images[0]?.imageUrl ?? null,
-                }}
-              />
+              <StaggerItem key={cat.id} hoverLift>
+                <CategoryCard
+                  category={{
+                    name: cat.name,
+                    slug: cat.slug,
+                    description: cat.description,
+                    productCount: cat._count.products,
+                    imageUrl: cat.products[0]?.images[0]?.imageUrl ?? null,
+                  }}
+                />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </section>
       ) : null}
 
       {/* ── Latest products ──────────────────────────── */}
       {latestProducts.length > 0 ? (
-        <section className="bg-brand-surface py-16 sm:py-20">
+        <section className="bg-brand-cream-dark py-16 sm:py-20">
           <div className="page-container">
             <SectionHeading
-              eyebrow="Fresh in store"
               title="New arrivals"
               description="The latest pieces ready and waiting for you."
             />
-            <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <StaggerGroup className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {latestProducts.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={{
-                    id: p.id,
-                    name: p.name,
-                    slug: p.slug,
-                    price: p.price === null ? null : Number(p.price),
-                    shortDescription: p.shortDescription,
-                    primaryImageUrl: p.images[0]?.imageUrl ?? null,
-                    category: { name: p.category.name, slug: p.category.slug },
-                  }}
-                />
+                <StaggerItem key={p.id} hoverLift>
+                  <ProductCard
+                    product={{
+                      id: p.id,
+                      name: p.name,
+                      slug: p.slug,
+                      shortDescription: p.shortDescription,
+                      primaryImageUrl: p.images[0]?.imageUrl ?? null,
+                      category: { name: p.category.name, slug: p.category.slug },
+                    }}
+                  />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerGroup>
             <div className="mt-10 text-center">
               <Link
                 href={categories[0] ? `/products/${categories[0].slug}` : "/contact"}
-                className="inline-block rounded-md border border-brand-primary px-6 py-3 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-primary hover:text-white"
+                className="inline-block rounded-lg border border-brand-primary px-6 py-3 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-primary hover:text-text-on-primary"
               >
                 See the full range
               </Link>
@@ -162,10 +160,9 @@ export default async function HomePage() {
       {/* ── Why us teaser ────────────────────────────── */}
       <section className="page-container py-16 sm:py-20">
         <div className="grid gap-10 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+          <RevealOnScroll className="lg:col-span-2">
             <SectionHeading
               align="left"
-              eyebrow="Why Pragati Furniture"
               title="Furniture that works as hard as you do"
               description={`For years, ${STORE.city} families have trusted us with their homes. Every sofa, bed and dining set is chosen for honest materials, strong construction and a fair price — and if you need something special, we make it to order.`}
             />
@@ -178,8 +175,8 @@ export default async function HomePage() {
                 <li key={item.title} className="flex items-start gap-3">
                   <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-brand-accent" />
                   <div>
-                    <p className="font-semibold text-brand-text">{item.title}</p>
-                    <p className="text-sm text-brand-text-muted">{item.text}</p>
+                    <p className="font-semibold text-text-primary">{item.title}</p>
+                    <p className="text-sm text-text-secondary">{item.text}</p>
                   </div>
                 </li>
               ))}
@@ -187,16 +184,17 @@ export default async function HomePage() {
             <div className="mt-8">
               <Link
                 href="/about"
-                className="inline-block rounded-md bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark"
+                className="btn-primary inline-block rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-text-on-primary hover:bg-brand-primary-dark"
               >
                 More about us
               </Link>
             </div>
-          </div>
+          </RevealOnScroll>
 
-          <aside className="rounded-xl border border-brand-border bg-brand-surface p-6">
-            <h3 className="text-lg font-semibold text-brand-text">Visit our store</h3>
-            <address className="mt-3 space-y-2 text-sm not-italic leading-6 text-brand-text-muted">
+          <RevealOnScroll delay={0.1}>
+            <aside className="rounded-xl border border-brand-border bg-brand-surface p-6">
+            <h3 className="text-lg font-semibold text-text-primary">Visit our store</h3>
+            <address className="mt-3 space-y-2 text-sm not-italic leading-6 text-text-secondary">
               {STORE.addressLines.map((line) => (
                 <span key={line} className="block">
                   {line}
@@ -206,25 +204,26 @@ export default async function HomePage() {
                 {STORE.phoneDisplay}
               </a>
             </address>
-            <p className="mt-4 text-sm text-brand-text-muted">Opening hours</p>
-            <p className="text-sm font-semibold text-brand-text">{STORE.hours}</p>
+            <p className="mt-4 text-sm text-text-secondary">Opening hours</p>
+            <p className="text-sm font-semibold text-text-primary">{STORE.hours}</p>
             <a
               href={whatsappLink("Hello Pragati Furniture! I'd like to know more about your range.")}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-block w-full rounded-md bg-brand-success px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-success/90"
+              className="btn-primary mt-5 inline-block w-full rounded-lg bg-brand-success px-4 py-2.5 text-center text-sm font-semibold text-text-on-primary hover:bg-brand-primary-light"
             >
               Message us on WhatsApp
             </a>
             <div className="mt-2">
               <Link
                 href="/contact"
-                className="inline-block w-full rounded-md border border-brand-border px-4 py-2.5 text-center text-sm font-semibold text-brand-text transition-colors hover:bg-brand-bg"
+                className="inline-block w-full rounded-lg border border-brand-border px-4 py-2.5 text-center text-sm font-semibold text-text-primary transition-colors hover:bg-brand-bg"
               >
                 Contact page & map
               </Link>
             </div>
           </aside>
+          </RevealOnScroll>
         </div>
       </section>
     </>

@@ -1,4 +1,4 @@
-// middleware.ts — central admin auth guard (docs/API.md §4).
+// proxy.ts — central admin auth guard (docs/API.md §4).
 // Protects /admin/* pages AND /api/admin/* route handlers with one file.
 //
 // Deviation from the docs' snippet (documented): for /api/admin/* requests we
@@ -13,7 +13,7 @@ import { verifySession } from "@/lib/auth";
 // Public exceptions under the protected matchers.
 const PUBLIC_PATHS = new Set(["/admin/login", "/api/admin/login", "/api/admin/logout"]);
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (PUBLIC_PATHS.has(pathname)) {

@@ -37,52 +37,52 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-brand-bg px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <p className="text-2xl font-semibold text-brand-text">Pragati Furniture</p>
-          <p className="mt-1 text-sm text-brand-text-muted">Admin sign in</p>
+          <p className="text-2xl font-semibold text-text-primary">Pragati Furniture</p>
+          <p className="mt-1 text-sm text-text-secondary">Admin sign in</p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-lg border border-brand-border bg-white p-6 shadow-sm"
+          className="rounded-lg border border-brand-border bg-brand-surface p-6 shadow-sm"
         >
           {error && (
-            <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+            <p className="mb-4 rounded-md border border-brand-error/30 bg-brand-error/10 px-3 py-2 text-sm text-brand-error">{error}</p>
           )}
 
           <label className="mb-4 block">
-            <span className="mb-1 block text-sm font-medium text-brand-text">Username</span>
+            <span className="mb-1 block text-sm font-medium text-text-primary">Username</span>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
               autoComplete="username"
-              className="w-full rounded-md border border-brand-border px-3 py-2 text-sm text-brand-text outline-none focus:border-brand-primary"
+              className="field w-full"
             />
           </label>
 
           <label className="mb-6 block">
-            <span className="mb-1 block text-sm font-medium text-brand-text">Password</span>
+            <span className="mb-1 block text-sm font-medium text-text-primary">Password</span>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full rounded-md border border-brand-border px-3 py-2 text-sm text-brand-text outline-none focus:border-brand-primary"
+              className="field w-full"
             />
           </label>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-md bg-brand-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-dark disabled:opacity-60"
+            className="w-full rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-on-primary transition-colors hover:bg-brand-primary-dark disabled:opacity-60"
           >
             {submitting ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-brand-text-muted">
+        <p className="mt-6 text-center text-sm text-text-secondary">
           <Link href="/" className="underline-offset-2 hover:underline">
             ← Back to public site
           </Link>

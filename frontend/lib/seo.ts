@@ -36,7 +36,7 @@ export function pageMetadata({
     description,
     alternates: { canonical: url },
     openGraph: {
-      type,
+      type: type === "product" ? "website" : type,
       title: pageTitle(title),
       description,
       url,

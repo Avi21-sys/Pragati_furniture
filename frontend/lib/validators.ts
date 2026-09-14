@@ -70,6 +70,27 @@ export const enquiryStatusSchema = z.object({
   status: z.enum(["NEW", "CONTACTED", "CLOSED"]),
 });
 
+// --- Admin: FAQs ---
+
+export const faqSchema = z.object({
+  question: z.string().min(1, "Question is required").max(255),
+  answer: z.string().min(1, "Answer is required"),
+  displayOrder: z.number().int().min(0).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const updateFaqSchema = faqSchema.partial();
+
+export const faqStatusSchema = z.object({
+  isActive: z.boolean(),
+});
+
+/** PATCH /api/admin/faqs/reorder — the full ordered list of FAQ ids.
+ *  displayOrder is written 1..N following array position (docs/API.md §3). */
+export const faqsReorderSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1),
+});
+
 // --- Admin: product images ---
 
 const dataUriPattern = /^data:image\/[a-zA-Z0-9.+-]+;base64,/;

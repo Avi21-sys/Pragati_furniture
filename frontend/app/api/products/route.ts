@@ -3,7 +3,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { ok, fail } from "@/lib/apiResponse";
-import { serializeProduct } from "@/lib/serializers";
+import { serializePublicProduct } from "@/lib/serializers";
 
 export async function GET(req: Request) {
   try {
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
       },
     });
 
-    return ok(products.map(serializeProduct));
+    return ok(products.map(serializePublicProduct));
   } catch (error) {
     console.error("[products] GET failed", error);
     return fail("Could not load products", 500);

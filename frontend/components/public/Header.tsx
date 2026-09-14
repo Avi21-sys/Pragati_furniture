@@ -1,6 +1,7 @@
 // components/public/Header.tsx — sticky site header with category navigation.
-// Client component only for the mobile menu toggle + active-link highlighting;
-// data (categories) is passed in from the server layout. Docs: SEO.md §2.
+// Deep-olive band, cream text and logo (docs/DESIGN.md §5). Client component
+// only for the mobile menu toggle + active-link highlighting; data (categories)
+// is passed in from the server layout. Docs: SEO.md §2.
 
 "use client";
 
@@ -21,15 +22,15 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-brand-border bg-brand-surface/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-black/10 bg-brand-primary text-text-on-primary shadow-sm">
       <div className="page-container flex h-16 items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-          <span className="flex h-9 w-9 items-center justify-center rounded bg-brand-primary text-lg font-bold text-white">
-            PF
+        <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-cream font-heading text-base font-semibold text-brand-primary">
+            pf
           </span>
-          <span className="text-lg font-semibold tracking-tight text-brand-text">
-            Pragati <span className="text-brand-primary">Furniture</span>
+          <span className="font-heading text-lg font-semibold tracking-tight text-text-on-primary">
+            Pragati <span className="text-brand-accent">Furniture</span>
           </span>
         </Link>
 
@@ -50,6 +51,9 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
           <NavLink href="/about" active={isActive("/about")}>
             About
           </NavLink>
+          <NavLink href="/faq" active={isActive("/faq")}>
+            FAQ
+          </NavLink>
           <NavLink href="/contact" active={isActive("/contact")}>
             Contact
           </NavLink>
@@ -60,9 +64,9 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
             href={whatsappLink(`Hello ${STORE.name}! I'd like to know more about your furniture.`)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-md bg-brand-success px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-success/90"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-cream px-4 py-2 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-cream-dark"
           >
-            <WhatsAppIcon className="h-4 w-4" />
+            <WhatsAppIcon className="h-4 w-4 text-brand-success" />
             WhatsApp
           </a>
         </div>
@@ -70,7 +74,7 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
         {/* Mobile hamburger */}
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md text-brand-text md:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md text-text-on-primary md:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
@@ -89,12 +93,12 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
 
       {/* Mobile menu */}
       {open ? (
-        <nav className="border-t border-brand-border bg-brand-surface md:hidden" aria-label="Mobile navigation">
+        <nav className="border-t border-black/10 bg-brand-primary md:hidden" aria-label="Mobile navigation">
           <div className="page-container flex flex-col py-3">
             <MobileLink href="/" onNavigate={() => setOpen(false)} active={isActive("/")}>
               Home
             </MobileLink>
-            <p className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-brand-text-muted">
+            <p className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-text-on-primary/60">
               Categories
             </p>
             {categories.map((cat) => (
@@ -110,6 +114,9 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
             <MobileLink href="/about" onNavigate={() => setOpen(false)} active={isActive("/about")}>
               About
             </MobileLink>
+            <MobileLink href="/faq" onNavigate={() => setOpen(false)} active={isActive("/faq")}>
+              FAQ
+            </MobileLink>
             <MobileLink href="/contact" onNavigate={() => setOpen(false)} active={isActive("/contact")}>
               Contact
             </MobileLink>
@@ -118,9 +125,9 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
                 href={whatsappLink(`Hello ${STORE.name}! I'd like to know more about your furniture.`)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-success px-4 py-2.5 text-sm font-semibold text-white"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-cream px-4 py-2.5 text-sm font-semibold text-brand-primary"
               >
-                <WhatsAppIcon className="h-4 w-4" />
+                <WhatsAppIcon className="h-4 w-4 text-brand-success" />
                 Chat on WhatsApp
               </a>
             </div>
@@ -135,8 +142,11 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
   return (
     <Link
       href={href}
+      aria-current={active ? "page" : undefined}
       className={`text-sm font-medium transition-colors ${
-        active ? "text-brand-primary" : "text-brand-text-muted hover:text-brand-text"
+        active
+          ? "text-text-on-primary underline decoration-brand-accent decoration-2 underline-offset-[6px]"
+          : "text-text-on-primary/75 hover:text-text-on-primary"
       }`}
     >
       {children}
@@ -159,8 +169,8 @@ function MobileLink({
     <Link
       href={href}
       onClick={onNavigate}
-      className={`rounded-md px-3 py-2.5 text-sm font-medium ${
-        active ? "bg-brand-bg text-brand-primary" : "text-brand-text hover:bg-brand-bg"
+      className={`rounded-lg px-3 py-2.5 text-sm font-medium ${
+        active ? "bg-brand-cream text-brand-primary" : "text-text-on-primary/90 hover:bg-black/10"
       }`}
     >
       {children}
