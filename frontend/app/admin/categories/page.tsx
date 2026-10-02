@@ -21,10 +21,27 @@ export default function AdminCategoriesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+    async function loadCategories() {
+      try {
+        const data = await apiFetch<Category[]>("/api/admin/categories");
+        if (active) {
+          setCategories(data);
+          setError(null);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : "Failed to load categories");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
     loadCategories();
+    return () => { active = false; };
   }, []);
 
-  async function loadCategories() {
+  async function refreshCategories() {
     try {
       setLoading(true);
       const data = await apiFetch<Category[]>("/api/admin/categories");

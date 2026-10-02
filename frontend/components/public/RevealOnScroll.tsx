@@ -5,7 +5,8 @@
 
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
+import { useReducedMotion } from "motion/react";
 
 export default function RevealOnScroll({
   children,
@@ -19,7 +20,7 @@ export default function RevealOnScroll({
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <motion.div
+    <m.div
       className={className}
       initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}
       whileInView={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
@@ -27,6 +28,6 @@ export default function RevealOnScroll({
       transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: "easeOut", delay }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

@@ -7,7 +7,7 @@
 ```json
 { "success": true, "data": { }, "message": "Optional message" }
 ```
-- **Admin auth**: JWT stored in an httpOnly cookie (`session`), set automatically by the browser after login. Route Handlers under `/api/admin/**` are protected by **Next.js Proxy** (`proxy.ts` — the renamed Middleware convention) that checks this cookie before the request even reaches the handler.
+- **Admin auth**: JWT stored in an httpOnly cookie (`session`), set automatically by the browser after login. Route Handlers under `/api/admin/**` are protected by **Next.js Middleware** (`middleware.ts`) that checks this cookie before the request even reaches the handler.
 - Base path: `/api`, implemented as files under `frontend/app/api/`
 
 ## 2. Public Endpoints (no auth)
@@ -34,6 +34,7 @@ Returns all active FAQs, ordered by `displayOrder`.
   { "id": 1, "question": "Do you offer home delivery?", "answer": "Yes, we deliver..." }
 ]
 ```
+> Note: FAQs display as a homepage accordion section, not a separate `/faq` page (see SEO.md for why this changed). This endpoint and its shape are unaffected either way — same data, different placement in the frontend.
 
 ### Enquiries
 **`POST /api/enquiries`** → `app/api/enquiries/route.ts`
@@ -72,28 +73,24 @@ Same endpoint list and request/response shapes as originally planned:
 
 All of these live under `app/api/admin/` and are protected by the same Middleware — no per-route auth code needed, since it's centralized.
 
-## 4. Proxy — auth guard (replaces Spring Security filter)
+## 4. Middleware (replaces Spring Security filter)
 
-`frontend/proxy.ts` — the file convention is `proxy` in Next.js 16 (`middleware` was renamed). One deviation from the snippet below (documented in the file): `/api/admin/*` requests get a **401 JSON envelope** instead of a redirect, so the admin panel's `fetch` calls detect an expired session cleanly; pages still redirect to `/admin/login`.
-
+`frontend/middleware.ts`:
 ```ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifySession } from '@/lib/auth';
+import { jwtVerify } from 'jose';
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const token = req.cookies.get('session')?.value;
-  if (!token) return respond(req);
-  const session = await verifySession(token);
-  if (!session) return respond(req);
-  return NextResponse.next();
-}
+  if (!token) return NextResponse.redirect(new URL('/admin/login', req.url));
 
-function respond(req: NextRequest) {
-  if (req.nextUrl.pathname.startsWith('/api/')) {
-    return NextResponse.json({ success: false, data: null, message: 'Not authenticated' }, { status: 401 });
+  try {
+    await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
+    return NextResponse.next();
+  } catch {
+    return NextResponse.redirect(new URL('/admin/login', req.url));
   }
-  return NextResponse.redirect(new URL('/admin/login', req.url));
 }
 
 export const config = {

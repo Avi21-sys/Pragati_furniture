@@ -28,21 +28,25 @@ export default function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProducts();
-  }, []);
-
-  async function loadProducts() {
-    try {
-      setLoading(true);
-      const data = await apiFetch<Product[]>("/api/admin/products");
-      setProducts(data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load products");
-    } finally {
-      setLoading(false);
+    let active = true;
+    async function loadProducts() {
+      try {
+        const data = await apiFetch<Product[]>("/api/admin/products");
+        if (active) {
+          setProducts(data);
+          setError(null);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : "Failed to load products");
+          setLoading(false);
+        }
+      }
     }
-  }
+    loadProducts();
+    return () => { active = false; };
+  }, []);
 
   async function handleDelete(id: number, name: string) {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;

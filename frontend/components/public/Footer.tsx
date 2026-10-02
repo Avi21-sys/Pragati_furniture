@@ -50,11 +50,6 @@ export default function Footer({ categories }: { categories: HeaderCategory[] })
                 Contact
               </Link>
             </li>
-            <li>
-              <Link href="/faq" className="text-text-on-primary/80 hover:text-text-on-primary">
-                FAQs
-              </Link>
-            </li>
           </ul>
         </RevealOnScroll>
 

@@ -1,185 +1,247 @@
-# Animation Guidelines — Pragati Furniture Website
+# Animation Guidelines — Pragati Furniture Website (v2)
 
-## 1. Library Choice: Motion (formerly Framer Motion)
+> **v2 changes:** adds a motion-token system, lazy-loaded animation library, a phased rollout plan with acceptance criteria, and specs for gallery/lightbox, FAQ accordion, header, form feedback, WhatsApp pulse, and image loading. Sections 1–5 keep and tighten the v1 rules (scroll reveals, hover, page fade, featured stack). Where v1 and v2 differ, v2 wins.
 
-Use the **`motion`** package (npm: `motion`, the renamed/current version of Framer Motion) — it's the standard animation library in the Next.js/React ecosystem, has built-in scroll-triggered animation support (`whileInView`), and works cleanly with the App Router once wrapped in Client Components.
+## 0. Goal and Tone
 
-```bash
-npm install motion
-```
+Animation exists to make products feel tangible and the shop feel trustworthy — not to show off. The site is warm and traditional (olive/cream, serif headings), and visitors are mostly local people on mid-range Android phones. Every animation must pass this test: *does it help the visitor look at furniture, understand what happened, or act — without slowing the page down?* If not, cut it.
 
-> Note: this only animates Client Components. Your public pages are Server Components by default (that's what makes SSG/ISR work) — so animated elements need a small `"use client"` wrapper component around just the animated part, not the whole page. This keeps the actual data-fetching and static generation untouched, while still allowing animation on top.
+**Not doing (by design):** parallax heroes, cursor-follow effects, animated headline text on the first screen, looping background motion, anything that moves the LCP element.
 
-## 2. Core Principles (non-negotiable, protects SEO/performance work already done)
+## 1. Tooling
 
-1. **Never animate layout-affecting properties** — only animate `opacity` and `transform` (translate, scale). Animating `width`, `height`, `margin`, etc. causes layout shift, which directly hurts your Cumulative Layout Shift (CLS) score from SEO.md.
-2. **Above-the-fold content must not be delayed by animation** — the hero section, page title, and primary CTA should be visible immediately, not fade in after a delay. Reserve entrance animations for content the user scrolls to, not the first thing they see.
-3. **Respect `prefers-reduced-motion`** — some users disable animations at the OS level (motion sensitivity, accessibility). Always check this and skip/reduce animation for those users. Motion's `useReducedMotion()` hook handles this in one line.
-4. **Keep durations short** — 150–400ms for most transitions. Anything longer starts to feel sluggish rather than polished.
-5. **Animations enhance, never gate content** — never rely on JavaScript animation to reveal content required for SEO indexing; if JS fails to load, content must still be present in the HTML (this is automatically true if you only animate opacity/transform on already-rendered elements, rather than conditionally rendering them via animation state).
+### Library: `motion` (already installed)
+Use `motion/react` only for animations that need JS: scroll reveals, staggers, drag (featured stack), lightbox transitions. Everything else should be **plain CSS** (hover zooms, accordion, WhatsApp pulse, button states) — zero JavaScript cost.
 
-## 3. Specific Animations
+### Load it lazily (Phase 1 task)
+The full `motion` component ships a lot of code. Use `LazyMotion` with the smaller `m` component so animation code is loaded on demand and stays small:
 
-### Hover Effects
-
-**Product cards** — subtle lift on hover:
 ```tsx
+// components/public/MotionProvider.tsx
 "use client";
-import { motion } from "motion/react";
+import { LazyMotion, domAnimation } from "motion/react";
 
-<motion.div
-  whileHover={{ y: -4, boxShadow: "0 8px 20px rgba(42,54,33,0.15)" }}
-  transition={{ duration: 0.2 }}
->
-  {/* card content */}
-</motion.div>
+export default function MotionProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <LazyMotion features={domAnimation} strict>
+      {children}
+    </LazyMotion>
+  );
+}
 ```
+```tsx
+// usage in existing primitives (RevealOnScroll, StaggerGrid, template.tsx)
+import * as m from "motion/react-m";
+<m.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} />
+```
+- Wrap the `(public)` layout's children in `MotionProvider`. `strict` makes the build fail loudly if someone accidentally uses the heavy `motion.div`.
+- `domAnimation` covers animate/hover/inView. **Drag and layout animations need `domMax`** — load that *only* for the featured stack (Section 6), via an async feature import so it isn't in the main bundle.
+- Confirm the saving with the build output / bundle analyzer rather than assuming.
 
-**Buttons** — gentle scale + background shift (background color transition can stay plain CSS, no need for Motion):
+### Motion tokens (single source of truth, like the color tokens)
+Put these next to the brand tokens in `globals.css`; components reference them, never raw numbers scattered around:
+
 ```css
-.btn-primary {
-  transition: background-color 0.2s ease, transform 0.15s ease;
-}
-.btn-primary:hover {
-  transform: scale(1.02);
-}
-```
-
-### Scroll-Triggered Reveals
-
-Use `whileInView` for sections as the user scrolls — category grid, "why choose us" content, footer sections:
-```tsx
-"use client";
-import { motion, useReducedMotion } from "motion/react";
-
-function RevealOnScroll({ children }: { children: React.ReactNode }) {
-  const shouldReduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
-      {children}
-    </motion.div>
-  );
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);      /* default for entrances */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);   /* for things that move and settle */
+  --dur-fast: 150ms;   /* hovers, button states */
+  --dur-base: 250ms;   /* fades, accordion, crossfades */
+  --dur-slow: 400ms;   /* scroll reveals, lightbox */
 }
 ```
-- `viewport={{ once: true }}` — animation plays once, doesn't re-trigger every time the user scrolls past it (re-triggering feels gimmicky, not polished)
-- `margin: "-80px"` — triggers slightly before the element is fully in view, feels more natural than waiting for the exact edge
+JS animations use the same values (`duration: 0.25`, `ease: [0.22, 1, 0.36, 1]`).
 
-Apply this wrapper around: category cards on the homepage, product grid items (staggered — see below), the "About" page content blocks.
+## 2. Core Principles (non-negotiable — protect SEO and performance)
 
-**Staggered reveal for grids** (product/category cards appearing one after another, not all at once):
-```tsx
-<motion.div
-  initial="hidden"
-  whileInView="visible"
-  viewport={{ once: true }}
-  transition={{ staggerChildren: 0.08 }}
->
-  {items.map((item) => (
-    <motion.div
-      key={item.id}
-      variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-    >
-      <ProductCard {...item} />
-    </motion.div>
-  ))}
-</motion.div>
-```
+1. **Animate only `opacity` and `transform`.** Animating width/height/margin causes layout shift and hurts CLS. *One deliberate exception:* the FAQ accordion (Section 5.3), because it is user-initiated (CLS ignores shifts right after a click/tap) and sits below the fold.
+2. **Never delay above-the-fold content.** Hero, page title, primary CTA, and the first product image render immediately. The LCP image never fades in — use `priority` and no entrance animation on it.
+3. **Respect `prefers-reduced-motion`.** Motion's `useReducedMotion()` for JS animations; a global CSS guard for CSS ones (already in `globals.css` — keep it). With reduced motion, content simply appears; nothing breaks.
+4. **Keep it short.** 150–400ms. Nothing decorative over 400ms.
+5. **Animation never gates content.** All content exists in the server-rendered HTML. Animations only change how already-present elements appear — no conditional mounting that hides content from crawlers.
+6. **Hover effects only where hover exists.** Wrap in `@media (hover: hover) and (pointer: fine)` so touch devices don't get stuck hover states.
+7. **No layout shift from media.** Every image container has a fixed `aspect-ratio` so nothing jumps as images load.
+8. **Do not animate:** the enquiry form's entrance (friction-free beats polish where people convert), admin panel pages (internal tool — keep it snappy).
 
-### Page Transitions
+## 3. Baseline (already built — verify, don't rebuild)
 
-Implemented via a `template.tsx` file in the `(public)` route group (Next.js re-mounts `template.tsx` on every navigation, unlike `layout.tsx` which persists — exactly the hook needed for transition animation):
+Reported as done by Claude Code; Phase 1 verifies them with Playwright:
+- `RevealOnScroll` — fade-up once, `-80px` trigger margin
+- `StaggerGroup` / `StaggerItem` — staggered grid reveal with optional hover lift
+- `app/(public)/template.tsx` — 0.2s fade-only page transition (fade only; never add slide/scale here)
+- `.btn-primary` hover scale (fine pointer + motion allowed only)
+- Global reduced-motion guard in `globals.css`
 
-```tsx
-// app/(public)/template.tsx
-"use client";
-import { motion, useReducedMotion } from "motion/react";
+## 4. Phased Rollout
 
-export default function Template({ children }: { children: React.ReactNode }) {
-  const shouldReduceMotion = useReducedMotion();
+Each phase = its own branch/commit(s) using Conventional Commits (e.g. `feat(anim): add product lightbox`). Do not start a phase until the previous one passes its checks.
 
-  return (
-    <motion.div
-      initial={shouldReduceMotion ? {} : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
-    >
-      {children}
-    </motion.div>
-  );
+### Phase 0 — Clear the deck (before any new animation)
+Animating on a shaky base wastes effort. Confirm first:
+- Login validation bug fixed and re-verified with Playwright
+- Lint errors fixed (`npm run lint` clean)
+- Standalone `/faq` route fully removed (FAQ is a homepage section — see SEO.md)
+- `git log` shows prior work committed; working tree clean
+
+### Phase 1 — Foundation (no visible change expected)
+- Add motion tokens to `globals.css`
+- Add `MotionProvider` (LazyMotion) and migrate existing primitives from `motion.*` to `m.*`
+- Verify the baseline animations still work (scroll, hover, page fade) via Playwright
+- **Check:** `npm run build` clean; record Lighthouse (mobile) scores for Home and one Product page as the **"before" baseline** — save the numbers in the PR description
+
+### Phase 2 — Low-risk, high-value
+Build in this order (Section 5 has each spec):
+1. Product gallery crossfade + lightbox
+2. Card image hover zoom
+3. FAQ accordion (homepage section)
+4. Enquiry form feedback (button states + success check)
+5. WhatsApp button attention pulse
+6. Image loading polish (placeholder + fade-in)
+
+**Check:** Lighthouse mobile scores not worse than baseline (CLS ≈ 0, LCP under 2.5s); everything works with reduced-motion on.
+
+### Phase 3 — Signature moments
+1. Featured stack deck on the homepage (Section 6)
+2. Header scroll behavior (Section 5.7)
+3. Optional trust strip count-up (Section 5.8) — **blocked until your uncle provides real numbers**
+
+**Check:** test on a real mid-range Android phone; drag must not block vertical page scroll.
+
+### Phase 4 — Quality gate
+- Lighthouse before/after comparison (from Phase 1 baseline)
+- Windows "Animation effects: off" test — site fully usable
+- Playwright walkthrough: home → category → product → lightbox → enquiry submit
+- Only now run the Impeccable `animate`/`polish` pass — instruct it explicitly: *"Follow docs/ANIMATIONS.md exactly. Use the `motion` library and the tokens defined there. Do not introduce another animation library or change durations/easing."*
+
+## 5. Specs
+
+### 5.1 Product gallery + lightbox
+- Main image sits in a fixed `aspect-ratio: 4/3` frame (no CLS). Thumbnails below/side.
+- **Switching images:** crossfade, `--dur-base`. Stack the incoming image over the outgoing one and fade `opacity`; no sliding.
+- **First image:** `priority`, no fade on initial load (it's the LCP element).
+- **Lightbox:** use the native `<dialog>` with `showModal()` — it gives focus trapping, Esc-to-close, and a backdrop for free (accessibility without extra code).
+  - Open: backdrop fades in (`--dur-base`); image fades and scales from 0.96 → 1 (`--dur-slow`, `--ease-out`).
+  - Prev/Next buttons + ArrowLeft/ArrowRight keys; horizontal swipe on touch.
+  - Zoom v1: tap/click toggles 2× using `transform: scale()` with `transform-origin` at the tap point. Skip custom pinch-zoom.
+  - Load the lightbox component with `next/dynamic` **only when first opened** — zero cost on initial page load. Request the larger Cloudinary size only at that point.
+- Buttons need `aria-label`s; focus returns to the trigger on close.
+
+### 5.2 Card image hover zoom (category + product cards)
+Pure CSS, no JS:
+```css
+.card-media { overflow: hidden; aspect-ratio: 4 / 3; border-radius: 0.5rem; }
+.card-media img { transition: transform var(--dur-slow) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .card-media img { transform: scale(1.05); }
 }
 ```
-Deliberately simple — **fade only, no slide/scale on page transitions.** This is the one place to resist adding more "presence" — a page transition sits directly between the user and the content they came for, so it needs to be fast and unobtrusive, not a showcase moment.
+The frame never changes size — only the image inside scales — so there is no layout shift. This replaces (does not stack on top of) the card lift where both would feel busy; keep the lift shadow subtle.
 
-## 4. Featured Stack Effect (Homepage Only)
+### 5.3 FAQ accordion (homepage section)
+- Content stays in the DOM when collapsed (crawlable). Use the CSS grid-rows technique:
+```css
+.faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-base) var(--ease-out); }
+.faq-item[data-open="true"] .faq-panel { grid-template-rows: 1fr; }
+.faq-panel > div { overflow: hidden; }
+```
+- Chevron rotates 180° (`transform`, `--dur-base`).
+- Accessibility: each question is a `<button aria-expanded aria-controls>`; panel has an `id`. Keyboard: Enter/Space toggles. Allow multiple open at once (simpler, less surprising).
+- Data comes from `GET /api/faqs` (active FAQs, `displayOrder`). Keep the `FAQPage` JSON-LD — see SEO.md.
 
-A Tinder-style stacked deck for the homepage's featured products/categories section — cards overlap slightly, the front card can be dragged/swiped, and swiping brings the next card forward. **Homepage only** — not used on category listing pages, where users need to scan many items at once, not one-at-a-time.
+### 5.4 Enquiry form feedback
+- **Button states:** idle → loading (spinner, button disabled, width fixed so the label swap doesn't shift layout) → success.
+- **Success:** replace the form area with a confirmation; draw a checkmark with an SVG `pathLength` animation (`--dur-slow`). Announce via `aria-live="polite"`.
+- **Errors:** field error text fades in (`--dur-fast`); no shaking.
+- The form itself does **not** animate in on scroll (Principle 8).
+
+### 5.5 WhatsApp button attention pulse
+- CSS keyframes on a pseudo-element ring (`transform: scale` + `opacity`), **2 iterations only**, starting ~3s after load, then still. Never loops forever.
+- Disabled entirely under reduced motion.
+- Purpose: nudge toward the main lead channel without nagging.
+
+### 5.6 Image loading polish
+- Every image frame has a `--brand-cream-dark` background so blank space looks intentional, and the image fades in (`opacity`, `--dur-base`) on load.
+- **Exception:** the LCP/first image — no fade, `priority`.
+- Optional later upgrade (requires a schema change, so **decide before doing it**): store a tiny `blurDataURL` per `ProductImage` at upload time and use `next/image` `placeholder="blur"`. Not needed for v1.
+
+### 5.7 Header scroll behavior
+- Header height stays **constant** (no reflow). On scroll past a small threshold, fade in a soft shadow and slightly tighten the logo via `transform: scale(0.94)`.
+- Detect scroll with an `IntersectionObserver` on a sentinel element near the top — not a scroll listener firing every frame.
+- Sticky/fixed positioning must respect the safe area and never overlap content.
+
+### 5.8 Trust strip count-up (optional — blocked on real data)
+- Only if your uncle provides real numbers (years in business, etc.). Never animate invented figures.
+- The **final number is in the server-rendered HTML**; on scroll-into-view it animates from 0 once. Reduced motion → show the final number immediately.
+
+## 6. Featured Stack Effect (Homepage Only)
+
+A Tinder-style stacked deck for featured products/categories: cards overlap slightly; the front card can be dragged/swiped to bring the next one forward. **Homepage only** — category pages need scannable grids, not one-at-a-time browsing.
 
 ### Behavior
-- 3–4 cards visible in the stack at once, each slightly offset and scaled down behind the front one (creates depth)
-- Front card is draggable horizontally; dragging past a threshold (~100px) swipes it away and brings the next card to front
-- Includes visible prev/next arrow buttons alongside the drag gesture — **not drag-only**, since not everyone will discover or be able to use a swipe gesture (mouse-only desktop users, screen reader users, motor-impairment accessibility)
-- All cards remain in the DOM at all times — only their visual position/z-index changes. This keeps every featured item crawlable by search engines regardless of which one is currently "on top"
+- 3–4 cards visible in the stack, each offset and scaled down behind the front one.
+- Front card draggable horizontally; swiping past ~100px **or** with enough velocity advances the stack. Under the threshold, it snaps back.
+- Visible Prev/Next buttons alongside the gesture — **never drag-only** (mouse-only, screen-reader, and motor-impairment users).
+- All cards stay in the DOM at all times; only position/z-index/opacity change (crawlable). Off-top cards use `aria-hidden`.
+- **Mobile scroll safety:** the draggable card must set `touch-action: pan-y` so a vertical swipe still scrolls the page. Test this on a real phone.
+- Keep to 5–6 hand-picked featured items, not the whole catalog.
 
-### Implementation
+### Loading
+Drag needs Motion's `domMax` features. Load them **only for this component**, and load the component itself with `next/dynamic` since it is below the fold:
+```tsx
+<LazyMotion features={() => import("./motionMaxFeatures").then(m => m.default)} strict>
+  {/* FeaturedStack */}
+</LazyMotion>
+```
+(`motionMaxFeatures.ts` default-exports `domMax`.)
+
+### Starting-point implementation
+Treat this as a sketch — verify the interplay between `drag` and `animate` in the real build:
 ```tsx
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence, PanInfo } from "motion/react";
+import * as m from "motion/react-m";
+import type { PanInfo } from "motion/react";
 
-interface StackItem {
-  id: string;
-  render: () => React.ReactNode;
-}
+interface StackItem { id: string; render: () => React.ReactNode; }
 
-function FeaturedStack({ items }: { items: StackItem[] }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+export default function FeaturedStack({ items }: { items: StackItem[] }) {
+  const [active, setActive] = useState(0);
+  const advance = (d: 1 | -1) => setActive((p) => (p + d + items.length) % items.length);
 
-  const advance = (direction: 1 | -1) => {
-    setActiveIndex((prev) => (prev + direction + items.length) % items.length);
+  const onDragEnd = (_: unknown, info: PanInfo) => {
+    const passed = Math.abs(info.offset.x) > 100 || Math.abs(info.velocity.x) > 500;
+    if (passed) advance(info.offset.x < 0 ? 1 : -1);
   };
 
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.x < -100) advance(1);
-    else if (info.offset.x > 100) advance(-1);
-  };
-
-  const visibleStack = [0, 1, 2].map((offset) => (activeIndex + offset) % items.length);
+  const visible = [0, 1, 2].map((o) => (active + o) % items.length);
 
   return (
     <div style={{ position: "relative", height: 420 }}>
-      {/* All items rendered for SEO/crawlability — visually hidden ones use aria-hidden */}
       {items.map((item, i) => {
-        const stackPosition = visibleStack.indexOf(i);
-        const isVisible = stackPosition !== -1;
-
+        const pos = visible.indexOf(i);
+        const shown = pos !== -1;
         return (
-          <motion.div
+          <m.div
             key={item.id}
-            drag={stackPosition === 0 ? "x" : false}
-            onDragEnd={stackPosition === 0 ? handleDragEnd : undefined}
+            drag={pos === 0 ? "x" : false}
+            dragSnapToOrigin
+            dragElastic={0.2}
+            onDragEnd={pos === 0 ? onDragEnd : undefined}
             animate={{
-              x: isVisible ? stackPosition * 12 : 0,
-              y: isVisible ? stackPosition * 8 : 0,
-              scale: isVisible ? 1 - stackPosition * 0.05 : 0.9,
-              opacity: isVisible ? 1 - stackPosition * 0.15 : 0,
-              zIndex: isVisible ? 10 - stackPosition : 0,
+              x: shown ? pos * 12 : 0,
+              y: shown ? pos * 8 : 0,
+              scale: shown ? 1 - pos * 0.05 : 0.9,
+              opacity: shown ? 1 - pos * 0.15 : 0,
+              zIndex: shown ? 10 - pos : 0,
             }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            style={{ position: "absolute", inset: 0, cursor: stackPosition === 0 ? "grab" : "default" }}
-            aria-hidden={stackPosition !== 0}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            style={{ position: "absolute", inset: 0, touchAction: "pan-y", cursor: pos === 0 ? "grab" : "default" }}
+            aria-hidden={pos !== 0}
           >
             {item.render()}
-          </motion.div>
+          </m.div>
         );
       })}
-
-      {/* Accessible controls — not dependent on drag gesture */}
       <div style={{ position: "absolute", bottom: -48, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 16 }}>
         <button onClick={() => advance(-1)} aria-label="Previous featured item">‹ Prev</button>
         <button onClick={() => advance(1)} aria-label="Next featured item">Next ›</button>
@@ -188,18 +250,18 @@ function FeaturedStack({ items }: { items: StackItem[] }) {
   );
 }
 ```
+Reduced motion: skip the stagger/scale transitions (instant position change); the buttons still work.
 
-### Notes
-- `dragElastic` can be added to `motion.div`'s drag config (e.g. `dragElastic={0.2}`) for a slightly springy resistance feel while dragging, if you want it to feel a bit more tactile
-- Keep the stack to featured/highlighted items only (e.g. 5-6 hand-picked products or categories) — not the entire catalog; it's a highlight reel, not a browsing mechanism
-- On mobile, this naturally responds to touch drag as well as mouse drag — Motion's `drag` prop handles both without extra code
+## 7. Testing Checklist (every phase)
+- **Reduced motion:** Windows → Settings → Accessibility → Visual effects → Animation effects **off**. Site fully usable, nothing broken.
+- **Lighthouse (mobile)** on Home and a Product page: compare to the Phase 1 baseline. CLS stays near 0; LCP under 2.5s; no regression.
+- **Real mid-range Android phone**, not just a laptop: no jank, drag doesn't fight vertical scroll.
+- **Keyboard only:** lightbox, accordion, and stack controls reachable and operable; visible focus.
+- **Playwright** walkthrough after each phase: home → category → product → lightbox → enquiry submit, watching for console errors.
+- **View source check:** disable JS and confirm all text content (products, FAQ answers, trust numbers) is still in the HTML.
 
-## 5. What NOT to Animate
-- Do not animate the hero/first-visible content on initial page load (see Principle 2)
-- Do not add scroll-reveal animation to the enquiry form or any conversion-critical element — friction-free is more important than polish for anything the customer needs to actually act on
-- Do not animate admin panel pages — it's an internal tool for your uncle, not a marketing surface; keep it snappy and utilitarian, animation there is wasted effort
-
-## 6. Testing Checklist Before Calling This Done
-- Toggle "Reduce motion" in your OS accessibility settings (Windows: Settings → Accessibility → Visual effects → Animation effects, off) and confirm the site still works smoothly with animations minimized
-- Run Lighthouse/PageSpeed Insights again after adding animations — confirm CLS score hasn't regressed from what SEO.md targets (near 0)
-- Check on an actual mid-range phone, not just desktop — animations that feel smooth on a laptop can stutter on budget Android phones, which are likely a meaningful share of this site's real traffic
+## 8. Instructions to Give Claude Code / Skills
+- "Docs are the source of truth: `docs/DESIGN.md` (colors, type) and this file (motion). Skills (Impeccable, 21st, etc.) execute against them and don't override them."
+- Do one phase at a time; one commit per feature; run the phase check before starting the next.
+- Don't add another animation library (no GSAP, no React Bits copies). One library: `motion`.
+- If a spec here conflicts with what a skill suggests, follow this file and tell me about the conflict.

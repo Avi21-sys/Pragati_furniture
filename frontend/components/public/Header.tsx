@@ -1,12 +1,12 @@
 // components/public/Header.tsx — sticky site header with category navigation.
 // Deep-olive band, cream text and logo (docs/DESIGN.md §5). Client component
-// only for the mobile menu toggle + active-link highlighting; data (categories)
-// is passed in from the server layout. Docs: SEO.md §2.
+// for the mobile menu toggle + active-link highlighting + scroll behavior
+// (ANIMATIONS.md §5.7). Data (categories) is passed in from the server layout.
 
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { STORE, whatsappLink } from "@/lib/constants";
 
@@ -17,22 +17,61 @@ export type HeaderCategory = {
 
 export default function Header({ categories }: { categories: HeaderCategory[] }) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Use IntersectionObserver on a sentinel element near the top
+  // to detect scroll position without scroll listeners firing every frame
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // When sentinel is NOT intersecting, user has scrolled past the top
+        setScrolled(!entries[0].isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
+  // Reset scrolled state on route change
+  useEffect(() => {
+    setScrolled(false);
+  }, [pathname]);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-black/10 bg-brand-primary text-text-on-primary shadow-sm">
-      <div className="page-container flex h-16 items-center justify-between gap-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-cream font-heading text-base font-semibold text-brand-primary">
-            pf
-          </span>
-          <span className="font-heading text-lg font-semibold tracking-tight text-text-on-primary">
-            Pragati <span className="text-brand-accent">Furniture</span>
-          </span>
-        </Link>
+    <>
+      {/* Sentinel element — sits above the header to detect scroll position */}
+      <div ref={sentinelRef} className="absolute top-0 left-0 right-0 h-px -z-10" aria-hidden="true" />
+
+      <header
+        className={`sticky top-0 z-40 border-b border-black/10 bg-brand-primary text-text-on-primary transition-shadow duration-300 ${
+          scrolled ? "shadow-md" : ""
+        }`}
+      >
+        <div className="page-container flex h-16 items-center justify-between gap-4">
+          {/* Logo */}
+          <Link
+            href="/"
+            className={`flex items-center gap-2.5 transition-transform duration-300 ${
+              scrolled ? "scale-[0.94]" : "scale-100"
+            }`}
+            onClick={() => setOpen(false)}
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-cream font-heading text-base font-semibold text-brand-primary">
+              pf
+            </span>
+            <span className="font-heading text-lg font-semibold tracking-tight text-text-on-primary">
+              Pragati <span className="text-brand-accent">Furniture</span>
+            </span>
+          </Link>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-6 md:flex" aria-label="Main navigation">
@@ -51,10 +90,7 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
           <NavLink href="/about" active={isActive("/about")}>
             About
           </NavLink>
-          <NavLink href="/faq" active={isActive("/faq")}>
-            FAQ
-          </NavLink>
-          <NavLink href="/contact" active={isActive("/contact")}>
+                    <NavLink href="/contact" active={isActive("/contact")}>
             Contact
           </NavLink>
         </nav>
@@ -114,9 +150,6 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
             <MobileLink href="/about" onNavigate={() => setOpen(false)} active={isActive("/about")}>
               About
             </MobileLink>
-            <MobileLink href="/faq" onNavigate={() => setOpen(false)} active={isActive("/faq")}>
-              FAQ
-            </MobileLink>
             <MobileLink href="/contact" onNavigate={() => setOpen(false)} active={isActive("/contact")}>
               Contact
             </MobileLink>
@@ -134,7 +167,8 @@ export default function Header({ categories }: { categories: HeaderCategory[] })
           </div>
         </nav>
       ) : null}
-    </header>
+      </header>
+    </>
   );
 }
 

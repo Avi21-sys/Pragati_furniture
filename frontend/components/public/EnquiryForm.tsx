@@ -1,6 +1,6 @@
 // components/public/EnquiryForm.tsx — client component. Posts to /api/enquiries
-// (docs/API.md §2) and shows a success/error state. Used on product detail and
-// contact pages.
+// (docs/API.md §2) and shows a success/error state with animated feedback
+// (docs/ANIMATIONS.md §5.4). Used on product detail and contact pages.
 
 "use client";
 
@@ -54,17 +54,44 @@ export default function EnquiryForm({ productId, productName }: Props) {
 
   if (status === "success") {
     return (
-      <div className="rounded-xl border border-brand-success/30 bg-brand-success/10 p-6 text-center">
+      <div
+        className="rounded-xl border border-brand-success/30 bg-brand-success/10 p-6 text-center"
+        role="status"
+        aria-live="polite"
+      >
         <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-brand-success text-text-on-primary">
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M5 13l4 4L19 7" />
+          <svg
+            className="h-5 w-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 13l4 4L19 7"
+              strokeDasharray="24"
+              strokeDashoffset="24"
+              style={{
+                animation: 'draw-check 0.4s ease-out forwards',
+              }}
+            />
           </svg>
         </span>
         <p className="mt-3 text-lg font-semibold text-brand-success">Enquiry sent</p>
         <p className="mt-1 text-sm text-text-secondary">
-          Thanks for reaching out{productName ? ` about "${productName}"` : ""}. We'll contact you
+          Thanks for reaching out{productName ? ` about "${productName}"` : ""}. We&apos;ll contact you
           within a day.
         </p>
+        <style jsx>{`
+          @keyframes draw-check {
+            to {
+              stroke-dashoffset: 0;
+            }
+          }
+        `}</style>
       </div>
     );
   }
@@ -143,9 +170,36 @@ export default function EnquiryForm({ productId, productName }: Props) {
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="w-full rounded-lg bg-brand-primary px-4 py-3 text-sm font-semibold text-text-on-primary transition-colors hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+        className="relative w-full rounded-lg bg-brand-primary px-4 py-3 text-sm font-semibold text-text-on-primary transition-colors hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+        style={{ minWidth: '140px' }}
       >
-        {status === "submitting" ? "Sending…" : "Send Enquiry"}
+        {status === "submitting" ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg
+              className="h-4 w-4 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            Sending…
+          </span>
+        ) : (
+          "Send Enquiry"
+        )}
       </button>
     </form>
   );

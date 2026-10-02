@@ -193,6 +193,15 @@ select.field {
   }
 }
 
+/* ── Motion tokens (docs/ANIMATIONS.md §4.1) ────────────────── */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);      /* default for entrances */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);   /* for things that move and settle */
+  --dur-fast: 150ms;   /* hovers, button states */
+  --dur-base: 250ms;   /* fades, accordion, crossfades */
+  --dur-slow: 400ms;   /* scroll reveals, lightbox */
+}
+
 /* ── Motion (docs/ANIMATIONS.md §3) ────────────────── */
 
 /* Primary CTAs: gentle scale on hover — only when fine-pointing and motion
@@ -220,4 +229,24 @@ select.field {
     transition-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* WhatsApp button pulse (ANIMATIONS.md §5.5) — runs 2 times, ~3s after load */
+@keyframes whatsapp-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+.whatsapp-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: currentColor;
+  animation: whatsapp-pulse-ring 1.25s ease-out 2;
 }

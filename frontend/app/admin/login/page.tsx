@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
         method: "POST",
         body: { username, password },
       });
-      router.push("/admin/products");
+      router.push("/admin/dashboard");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");

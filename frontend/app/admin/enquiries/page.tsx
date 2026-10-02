@@ -30,21 +30,25 @@ export default function AdminEnquiriesPage() {
   const [filter, setFilter] = useState<string>("ALL");
 
   useEffect(() => {
-    loadEnquiries();
-  }, []);
-
-  async function loadEnquiries() {
-    try {
-      setLoading(true);
-      const data = await apiFetch<Enquiry[]>("/api/admin/enquiries");
-      setEnquiries(data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load enquiries");
-    } finally {
-      setLoading(false);
+    let active = true;
+    async function loadEnquiries() {
+      try {
+        const data = await apiFetch<Enquiry[]>("/api/admin/enquiries");
+        if (active) {
+          setEnquiries(data);
+          setError(null);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : "Failed to load enquiries");
+          setLoading(false);
+        }
+      }
     }
-  }
+    loadEnquiries();
+    return () => { active = false; };
+  }, []);
 
   async function updateStatus(enquiry: Enquiry, newStatus: string) {
     try {

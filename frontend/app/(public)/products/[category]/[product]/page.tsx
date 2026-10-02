@@ -139,7 +139,7 @@ export default async function ProductPage({ params }: PageProps) {
           <div className="mt-8 border-t border-brand-border pt-8">
             <h2 className="text-lg font-semibold text-text-primary">Send an enquiry</h2>
             <p className="mt-1 mb-5 text-sm text-text-secondary">
-              Tell us more and we'll call you back with details and the best price.
+              Tell us more and we&apos;ll call you back with details and the best price.
             </p>
             <EnquiryForm productId={product.id} productName={product.name} />
           </div>

@@ -1,6 +1,8 @@
 // app/(public)/page.tsx — Home page. SSG (static, built once).
-// Shows categories, latest products and business highlights. Carries
-// LocalBusiness JSON-LD (docs/SEO.md §5).
+// Shows categories, latest products, business highlights, and FAQ section.
+// Carries LocalBusiness + FAQPage JSON-LD (docs/SEO.md §5).
+// FAQ is now a homepage section (not a separate /faq page) since Google
+// deprecated FAQ rich results in May 2026 (SEO.md §5 revision).
 
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +14,8 @@ import ProductCard from "@/components/public/ProductCard";
 import JsonLd from "@/components/public/JsonLd";
 import RevealOnScroll from "@/components/public/RevealOnScroll";
 import { StaggerGroup, StaggerItem } from "@/components/public/StaggerGrid";
+import FAQAccordion from "@/components/public/FAQAccordion";
+
 export const metadata = pageMetadata({
   title: "Quality Wooden Furniture in Muzaffarnagar",
   description:
@@ -20,7 +24,7 @@ export const metadata = pageMetadata({
 });
 
 export default async function HomePage() {
-  const [categories, latestProducts] = await Promise.all([
+  const [categories, latestProducts, faqs] = await Promise.all([
     // Categories with active-product count + a representative cover image.
     prisma.category.findMany({
       orderBy: { name: "asc" },
@@ -45,8 +49,14 @@ export default async function HomePage() {
         images: { orderBy: [{ isPrimary: "desc" }, { displayOrder: "asc" }], take: 1 },
       },
     }),
+    // Active FAQs for homepage FAQ section (SEO.md §5 revision).
+    prisma.faq.findMany({
+      where: { isActive: true },
+      orderBy: [{ displayOrder: "asc" }, { id: "asc" }],
+    }),
   ]);
 
+  // LocalBusiness JSON-LD for the store.
   const localBusinessJsonLd = {
     "@context": "https://schema.org",
     "@type": "FurnitureStore",
@@ -62,9 +72,22 @@ export default async function HomePage() {
     telephone: STORE.phoneDisplay,
   };
 
+  // FAQPage JSON-LD — included even though Google deprecated FAQ rich results
+  // in May 2026; may be used by AI answer engines (SEO.md §5).
+  const faqJsonLd = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: { "@type": "Answer", text: f.answer },
+    })),
+  } : null;
+
   return (
     <>
       <JsonLd data={localBusinessJsonLd} />
+      {faqJsonLd && <JsonLd data={faqJsonLd} />}
 
       {/* ── Hero ─────────────────────────────────────── */}
       <section className="bg-brand-primary-dark text-text-on-primary">
@@ -226,6 +249,23 @@ export default async function HomePage() {
           </RevealOnScroll>
         </div>
       </section>
+
+      {/* ── FAQ Section ──────────────────────────────── */}
+      {/* Moved from standalone /faq page since Google deprecated FAQ rich results
+          in May 2026 (SEO.md §5 revision). Still emits FAQPage JSON-LD. */}
+      {faqs.length > 0 ? (
+        <section className="bg-brand-cream-dark py-16 sm:py-20">
+          <div className="page-container">
+            <SectionHeading
+              title="Frequently asked questions"
+              description={`Common questions about ${STORE.name}, ${STORE.city} — delivery, customization, materials, warranty and more.`}
+            />
+            <RevealOnScroll className="mx-auto mt-10 max-w-3xl">
+              <FAQAccordion faqs={faqs} />
+            </RevealOnScroll>
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

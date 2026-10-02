@@ -6,7 +6,8 @@
 
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
+import { useReducedMotion } from "motion/react";
 
 export function StaggerGroup({
   children,
@@ -18,7 +19,7 @@ export function StaggerGroup({
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <motion.div
+    <m.div
       className={className}
       initial={shouldReduceMotion ? { opacity: 1 } : "hidden"}
       whileInView={shouldReduceMotion ? { opacity: 1 } : "visible"}
@@ -33,7 +34,7 @@ export function StaggerGroup({
       }
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -53,7 +54,7 @@ export function StaggerItem({
   };
 
   return (
-    <motion.div
+    <m.div
       className={className}
       variants={shouldReduceMotion ? undefined : baseVariants}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -68,6 +69,6 @@ export function StaggerItem({
       }
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

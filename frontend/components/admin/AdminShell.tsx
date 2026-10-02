@@ -29,17 +29,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     // Re-check on every route change: a client-side navigation from the login
     // page preserves this layout's state, so without re-running the check a
     // stale `null` session would render a blank page on the next route.
-    setChecking(true);
-    apiFetch<Session>("/api/admin/me")
-      .then((data) => {
+    async function checkAuth() {
+      try {
+        const data = await apiFetch<Session>("/api/admin/me");
         if (active) setSession(data);
-      })
-      .catch(() => {
+      } catch {
         if (active && pathname !== "/admin/login") router.replace("/admin/login");
-      })
-      .finally(() => {
+      } finally {
         if (active) setChecking(false);
-      });
+      }
+    }
+    checkAuth();
     return () => {
       active = false;
     };
