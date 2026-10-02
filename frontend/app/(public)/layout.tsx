@@ -1,11 +1,13 @@
 // app/(public)/layout.tsx — public site shell: header + footer + WhatsApp button.
 // Route group, so it adds no URL segment. Categories are fetched here (build time
 // for static pages / ISR) and passed to the header + footer navigation.
+// Wrapped in MotionProvider for LazyMotion (ANIMATIONS.md §1).
 
 import { prisma } from "@/lib/prisma";
 import Header from "@/components/public/Header";
 import Footer from "@/components/public/Footer";
 import WhatsAppButton from "@/components/public/WhatsAppButton";
+import MotionProvider from "@/components/public/MotionProvider";
 
 export default async function PublicLayout({
   children,
@@ -18,11 +20,13 @@ export default async function PublicLayout({
   });
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header categories={categories} />
-      <main className="flex-1">{children}</main>
-      <Footer categories={categories} />
-      <WhatsAppButton />
-    </div>
+    <MotionProvider>
+      <div className="flex min-h-screen flex-col">
+        <Header categories={categories} />
+        <main className="flex-1">{children}</main>
+        <Footer categories={categories} />
+        <WhatsAppButton />
+      </div>
+    </MotionProvider>
   );
 }

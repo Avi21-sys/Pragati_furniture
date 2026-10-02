@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pragati Furniture - Animation Diagnostics</title>
+  <style>
+    :root {
+      --brand-primary: #3A4A2E;
+      --brand-cream: #FAF6EC;
+      --brand-text: #2A2A22;
+      --brand-success: #4A7C59;
+      --brand-error: #A8453A;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --brand-cream: #2A2A22;
+        --brand-text: #FAF6EC;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: var(--brand-cream);
+      color: var(--brand-text);
+      line-height: 1.6;
+    }
+
+    h1 { color: var(--brand-primary); margin-bottom: 30px; }
+    h2 { color: var(--brand-primary); margin-top: 30px; border-bottom: 2px solid var(--brand-primary); padding-bottom: 8px; }
+
+    .status { padding: 12px 16px; margin: 12px 0; border-radius: 8px; font-weight: 500; }
+    .status.pass { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .status.fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .status.warn { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f4f4f4; padding: 16px; border-radius: 8px; overflow-x: auto; }
+
+    .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin: 20px 0; }
+    .test-card { border: 1px solid #ddd; padding: 16px; border-radius: 8px; background: white; }
+    .test-card h3 { margin: 0 0 12px 0; font-size: 1.1em; }
+
+    button { background: var(--brand-primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1em; margin: 8px 8px 8px 0; }
+    button:hover { opacity: 0.9; }
+
+    #results { margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Pragati Furniture - Animation Diagnostics</h1>
+
+  <p>This diagnostic page checks if your browser can render the animation components properly. Click "Run All Tests" to begin.</p>
+
+  <button onclick="runAllTests()">Run All Tests</button>
+  <button onclick="window.location.href='/'">Go to Homepage</button>
+  <button onclick="window.location.href='/products/sofas/3-seater-sheesham-wood-sofa'">Go to Product Page</button>
+
+  <div id="results"></div>
+
+  <script>
+    const results = document.getElementById('results');
+
+    function addResult(title, status, message) {
+      const div = document.createElement('div');
+      div.className = `status ${status}`;
+      div.innerHTML = `<strong>${title}:</strong> ${message}`;
+      results.appendChild(div);
+    }
+
+    function addSection(title) {
+      const h2 = document.createElement('h2');
+      h2.textContent = title;
+      results.appendChild(h2);
+    }
+
+    async function runAllTests() {
+      results.innerHTML = '<p>Running diagnostics...</p>';
+
+      // 1. Browser capabilities
+      addSection('Browser Capabilities');
+
+      const supportsIntersectionObserver = 'IntersectionObserver' in window;
+      addResult('IntersectionObserver', supportsIntersectionObserver ? 'pass' : 'fail',
+        supportsIntersectionObserver ? 'Supported' : 'Not supported - header scroll won\'t work');
+
+      const supportsDialog = 'HTMLDialogElement' in window;
+      addResult('Dialog Element', supportsDialog ? 'pass' : 'fail',
+        supportsDialog ? 'Supported' : 'Not supported - lightbox may not work');
+
+      const supportsLocalStorage = (() => {
+        try {
+          localStorage.setItem('test', 'test');
+          localStorage.removeItem('test');
+          return true;
+        } catch { return false; }
+      })();
+      addResult('localStorage', supportsLocalStorage ? 'pass' : 'warn',
+        supportsLocalStorage ? 'Working' : 'Blocked or unavailable');
+
+      const supportsGridTemplateRows = CSS.supports('grid-template-rows', '1fr');
+      addResult('CSS Grid Template Rows', supportsGridTemplateRows ? 'pass' : 'fail',
+        supportsGridTemplateRows ? 'Supported' : 'Not supported - FAQ accordion may not animate');
+
+      // 2. Motion preferences
+      addSection('Motion Preferences');
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      addResult('Reduced Motion', reducedMotion ? 'warn' : 'pass',
+        reducedMotion ? 'Enabled - animations will be simplified' : 'Not enabled - full animations active');
+
+      // 3. Network checks
+      addSection('Network Status');
+
+      try {
+        const res = await fetch('/_next/static/chunks/main.js', { method: 'HEAD' });
+        addResult('Next.js Assets', res.ok ? 'pass' : 'fail',
+          res.ok ? 'Loading correctly' : `HTTP ${res.status}`);
+      } catch (e) {
+        addResult('Next.js Assets', 'fail', `Failed to load: ${e.message}`);
+      }
+
+      try {
+        const res = await fetch('/api/faqs');
+        const data = await res.json();
+        addResult('FAQ API', res.ok ? 'pass' : 'fail',
+          res.ok ? `${data.data?.length || 0} FAQs loaded` : `HTTP ${res.status}`);
+      } catch (e) {
+        addResult('FAQ API', 'fail', `Failed: ${e.message}`);
+      }
+
+      // 4. Page render test
+      addSection('Page Rendering Test');
+
+      try {
+        const homeRes = await fetch('/');
+        const homeHtml = await homeRes.text();
+        const hasContent = homeHtml.length > 10000;
+        const hasHeader = homeHtml.includes('<header');
+        const hasSections = (homeHtml.match(/<section/g) || []).length;
+
+        addResult('Homepage HTML', hasContent ? 'pass' : 'fail',
+          `${(homeHtml.length / 1024).toFixed(1)}KB, ${hasSections} sections, header: ${hasHeader}`);
+      } catch (e) {
+        addResult('Homepage HTML', 'fail', e.message);
+      }
+
+      // 5. Console errors check
+      addSection('Console Check');
+
+      const errors = [];
+      const originalError = console.error;
+      console.error = (...args) => {
+        errors.push(args.join(' '));
+        originalError.apply(console, args);
+      };
+
+      setTimeout(() => {
+        console.error = originalError;
+        if (errors.length === 0) {
+          addResult('Console Errors', 'pass', 'No errors detected');
+        } else {
+          addResult('Console Errors', 'fail', `${errors.length} error(s) detected`);
+          const pre = document.createElement('pre');
+          pre.textContent = errors.join('\n');
+          results.appendChild(pre);
+        }
+      }, 2000);
+
+      // 6. Animation token check
+      addSection('CSS Animation Tokens');
+
+      const root = getComputedStyle(document.documentElement);
+      const tokens = {
+        '--ease-out': root.getPropertyValue('--ease-out').trim(),
+        '--dur-fast': root.getPropertyValue('--dur-fast').trim(),
+        '--dur-base': root.getPropertyValue('--dur-base').trim(),
+        '--dur-slow': root.getPropertyValue('--dur-slow').trim(),
+      };
+
+      const allDefined = Object.values(tokens).every(v => v !== '');
+      addResult('Motion Tokens', allDefined ? 'pass' : 'fail',
+        allDefined ? 'All defined' : 'Some tokens missing');
+
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(tokens, null, 2);
+      results.appendChild(pre);
+
+      // 7. Cache status
+      addSection('Cache Status');
+
+      const cacheControl = performance.getEntriesByType('navigation')[0]?.transferSize || 'unknown';
+      addResult('Page Cache', 'pass',
+        `Transfer size: ${typeof cacheControl === 'number' ? (cacheControl / 1024).toFixed(1) + 'KB' : 'unknown'}`);
+
+      // 8. Final recommendations
+      addSection('Recommendations');
+
+      const recommendations = [];
+      if (!supportsIntersectionObserver) recommendations.push('Update your browser for header scroll animations');
+      if (!supportsDialog) recommendations.push('Update your browser for product lightbox');
+      if (reducedMotion) recommendations.push('Animations are simplified due to your system preferences');
+      if (errors.length > 0) recommendations.push('Check browser console for JavaScript errors');
+
+      if (recommendations.length === 0) {
+        addResult('Status', 'pass', 'All systems operational! If you see blank pages, try: 1) Hard refresh (Ctrl+Shift+R), 2) Clear browser cache, 3) Open in incognito/private window');
+      } else {
+        recommendations.forEach((rec, i) => {
+          addResult(`Recommendation ${i + 1}`, 'warn', rec);
+        });
+      }
+    }
+
+    // Auto-run on load
+    window.addEventListener('load', () => {
+      setTimeout(runAllTests, 500);
+    });
+  </script>
+</body>
+</html>
